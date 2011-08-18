@@ -1,0 +1,6 @@
+2011-08-18 Pierrick  <pierrick@in-cite.net>
+
+	* initial code generated with kickstarter
+	* Added: Abstract node class.
+	* Added: Node List class.
+	* Added: Some of the nodes needed for schedule viewing.
