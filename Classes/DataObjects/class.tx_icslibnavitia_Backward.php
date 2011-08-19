@@ -7,6 +7,7 @@ class tx_icslibnavitia_Backward extends tx_icslibnavitia_Node {
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
+		$this->values['direction'] = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
 	}
 	
 	public function ReadXML(XMLReader $reader) {
@@ -16,4 +17,5 @@ class tx_icslibnavitia_Backward extends tx_icslibnavitia_Node {
 	public function __toString() {
 		return get_class($this);
 	}
+	
 }

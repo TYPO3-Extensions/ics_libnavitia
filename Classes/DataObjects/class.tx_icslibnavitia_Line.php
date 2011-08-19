@@ -11,6 +11,10 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 		'order' => 'int',
 		'color' => 'string',
 		'adaptedRoute' => 'bool',
+		'modeType' => 'object:tx_icslibnavitia_ModeType',
+		'network' => 'object:tx_icslibnavitia_Network',
+		'forward' => 'object:tx_icslibnavitia_Forward',
+		'backward' => 'object:tx_icslibnavitia_Backward',
 	);
 
 	public function __construct() {

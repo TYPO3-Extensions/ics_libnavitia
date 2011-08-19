@@ -8,6 +8,12 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 		'code' => 'string',
 		'externalCode' => 'string',
 		'fareZone' => 'int',
+		// 'address' => 'object:', 
+		// 'equipment' => 'object:', 
+		'mode' => 'object:tx_icslibnavitia_Mode', 
+		// 'city' => 'object:', 
+		'stopArea' => 'object:tx_icslibnavitia_StopArea', 
+		'coord' => 'object:tx_icslibnavitia_Coord', 
 	);
 
 	public function __construct() {

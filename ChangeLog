@@ -1,3 +1,11 @@
+2011-08-19 Pierrick  <pierrick@in-cite.net>
+
+	* Added: Read only list.
+	* Changed: new intermediate folder for node classes.
+	* Added: Object fields.
+	* Added: Dummy service for schedule with real hard data.
+	* Changed: Extended type specification for nodes fields.
+
 2011-08-18 Pierrick  <pierrick@in-cite.net>
 
 	* initial code generated with kickstarter

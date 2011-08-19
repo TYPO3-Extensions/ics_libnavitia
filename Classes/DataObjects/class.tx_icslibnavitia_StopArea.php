@@ -5,9 +5,10 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 		'idx' => 'int',
 		'id' => 'int',
 		'name' => 'string',
-		'code' => 'string',
 		'externalCode' => 'string',
 		'main' => 'bool',
+		// 'city' => 'object:',
+		'coord' => 'object:tx_icslibnavitia_Coord?',
 		// '' => '',
 	);
 

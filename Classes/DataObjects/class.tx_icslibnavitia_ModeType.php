@@ -1,14 +1,10 @@
 <?php
 
-class tx_icslibnavitia_RoutePoint extends tx_icslibnavitia_Node {
+class tx_icslibnavitia_ModeType extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'idx' => 'int',
-		'id' => 'int',
+		'name' => 'string',
 		'externalCode' => 'string',
-		'routeIdx' => 'int',
-		'main' => 'bool',
-		'fareSection' => 'int',
-		'stopPoint' => 'object:tx_icslibnavitia_StopPoint',
 	);
 
 	public function __construct() {

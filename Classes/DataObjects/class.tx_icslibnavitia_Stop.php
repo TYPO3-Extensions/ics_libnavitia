@@ -7,8 +7,10 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 		'journeyIdx' => 'int',
 		'hour' => 'int',
 		'minute' => 'int',
-		'destination' => 'int',
+		'destination' => 'int', // TODO: Add support for providing destination object.
 		'order' => 'int',
+		// 'stopTime' => 'object:',
+		// 'toute' => 'object:',
 		// '' => '',
 	);
 
