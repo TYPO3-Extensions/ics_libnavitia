@@ -6,9 +6,9 @@ class tx_icslibnavitia_RoutePoint extends tx_icslibnavitia_Node {
 		'id' => 'int',
 		'externalCode' => 'string',
 		'routeIdx' => 'int',
-		'main' => 'bool',
-		'fareSection' => 'int',
+		'main' => 'string',
 		'stopPoint' => 'object:tx_icslibnavitia_StopPoint',
+		'stopArea' => 'object:tx_icslibnavitia_StopArea?',
 	);
 
 	public function __construct() {

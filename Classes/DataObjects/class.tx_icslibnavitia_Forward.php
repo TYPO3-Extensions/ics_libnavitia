@@ -3,11 +3,11 @@
 class tx_icslibnavitia_Forward extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'name' => 'string',
+		'direction' => 'object:tx_icslibnavitia_StopArea?',
 	);
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
-		$this->values['direction'] = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
 	}
 	
 	public function ReadXML(XMLReader $reader) {

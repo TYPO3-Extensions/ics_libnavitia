@@ -9,6 +9,7 @@ class tx_icslibnavitia_ModeType extends tx_icslibnavitia_Node {
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
+		// modelist
 	}
 	
 	public function ReadXML(XMLReader $reader) {

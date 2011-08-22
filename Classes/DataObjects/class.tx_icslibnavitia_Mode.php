@@ -6,6 +6,7 @@ class tx_icslibnavitia_Mode extends tx_icslibnavitia_Node {
 		'id' => 'int',
 		'name' => 'string',
 		'externalCode' => 'string',
+		'typeExternalCode' => 'string',
 	);
 
 	public function __construct() {

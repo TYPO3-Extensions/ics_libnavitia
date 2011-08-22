@@ -12,6 +12,7 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 		'color' => 'string',
 		'adaptedRoute' => 'bool',
 		'modeType' => 'object:tx_icslibnavitia_ModeType',
+		// 'comment' => 'object',
 		'network' => 'object:tx_icslibnavitia_Network',
 		'forward' => 'object:tx_icslibnavitia_Forward',
 		'backward' => 'object:tx_icslibnavitia_Backward',
@@ -19,6 +20,7 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
+		// impactposlist
 	}
 	
 	public function ReadXML(XMLReader $reader) {
