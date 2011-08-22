@@ -38,7 +38,7 @@ class tx_icslibnavitia_ extends tx_icslibnavitia_Node {
 					E_USER_WARNING);
 				return;
 			}
-			$value /= 60:
+			$value /= 60;
 			$this->fields['minutes'] = $value % 60;
 			$value /= 60;
 			$this->fields['hour'] = $value % 24;

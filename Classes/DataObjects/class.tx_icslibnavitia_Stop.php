@@ -13,7 +13,7 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 		'order' => 'int',
 		'vehicleIdx' => 'int',
 		'stopTime' => 'object:tx_icslibnavitia_Time',
-		'stopArrival' => 'object:tx_icslibnavitia_Time',
+		'stopArrivalTime' => 'object:tx_icslibnavitia_Time',
 		'stopPoint' => 'object:tx_icslibnavitia_StopPoint?',
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?',
 		// 'VehicleJourney' => 'object:?',

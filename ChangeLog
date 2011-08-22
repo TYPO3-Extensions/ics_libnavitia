@@ -1,4 +1,9 @@
-2011-08-19 Pierrick  <pierrick@in-cite.net>
+2011-08-22 Pierrick Caillon <pierrick@in-cite.net>
+	* Added: Time node.
+	* Adjusted Node structure according to XML schemas.
+	* Finished first data set for schedule's dummy service.
+
+2011-08-19 Pierrick Caillon <pierrick@in-cite.net>
 
 	* Added: Read only list.
 	* Changed: new intermediate folder for node classes.
@@ -6,7 +11,7 @@
 	* Added: Dummy service for schedule with real hard data.
 	* Changed: Extended type specification for nodes fields.
 
-2011-08-18 Pierrick  <pierrick@in-cite.net>
+2011-08-18 Pierrick Caillon <pierrick@in-cite.net>
 
 	* initial code generated with kickstarter
 	* Added: Abstract node class.
