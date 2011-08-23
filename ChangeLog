@@ -1,5 +1,6 @@
 2011-08-23 Pierrick Caillon <pierrick@in-cite.net>
 	* Added: Nodes for EntryPoint, PlanJourney and StreeNetwork.
+	* Started parsing for EntryPoint node.
 
 2011-08-22 Pierrick Caillon <pierrick@in-cite.net>
 	* Added: Time node.

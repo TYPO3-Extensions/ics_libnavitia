@@ -143,6 +143,7 @@ abstract class tx_icslibnavitia_Node {
 		if (array_key_exists($name, $this->values)) {
 			$this->setDefaultValue($name, self::getFieldsRefField($this->fields, $name));
 		}
+		$trace = debug_backtrace();
 		trigger_error(
 			'Properties not unsettable, set default value if valid' .
 			' in ' . $trace[0]['file'] .
@@ -151,6 +152,27 @@ abstract class tx_icslibnavitia_Node {
 	}
 	
 	abstract public function ReadXML(XMLReader $reader);
+	
+	/**
+	 * Skip all child nodes of the current Element node.
+	 *
+	 * The method MUST be called only when the reader is on an Element node.
+	 * After the call, the reader is on the corresponding EndElement node or not moved.
+	 *
+	 * @param $reader XMLReader The reader to manipulate.
+	 */
+	protected function SkipChildren(XMLReader $reader) {
+		if (!$reader->isEmptyElement) {
+			do {
+				$reader->read();
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					$this->SkipChildren($reader);
+					continue;
+				}
+			}
+			while ($reader->nodeType != XMLReader::END_ELEMENT);
+		}
+	}
 	
 	abstract public function __toString();
 }
