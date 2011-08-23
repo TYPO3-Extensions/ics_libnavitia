@@ -1,6 +1,6 @@
 <?php
 
-class tx_icslibnavitia_ extends tx_icslibnavitia_Node {
+class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'day' => 'int',
 		'hour' => 'int',

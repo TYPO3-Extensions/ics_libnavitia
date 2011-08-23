@@ -194,9 +194,11 @@ class tx_icslibnavitia_DummyScheduleService {
 			'LineList' => $lines,
 			'DestinationList' => $destinations,
 		);
+		if (!$forward)
+			return $result;
 		if ($lineExternalCode != 'STA1188')
 			return $result;
-		if (!in_array($stopPointExternalCode, in_array('STANav5912')))
+		if (!in_array($stopPointExternalCode, array('STANav5912')))
 			return $result;
 		$stops->
 			Add($this->makeStop1(3544, 4571, 'STA1814-280', 0, 0, 660))->
