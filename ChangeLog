@@ -1,3 +1,6 @@
+2011-08-23 Pierrick Caillon <pierrick@in-cite.net>
+	* Added: Nodes for EntryPoint, PlanJourney and StreeNetwork.
+
 2011-08-22 Pierrick Caillon <pierrick@in-cite.net>
 	* Added: Time node.
 	* Adjusted Node structure according to XML schemas.
