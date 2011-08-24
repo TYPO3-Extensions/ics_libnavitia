@@ -15,7 +15,41 @@ class tx_icslibnavitia_Address extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Address');
+	}
+	
+	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'AddressId':
+				$this->__set('id', (int)$reader->value);
+				break;
+			case 'AddressName':
+				$this->__set('name', $reader->value);
+				break;
+			case 'AddressIdx':
+				$this->__set('idx', (int)$reader->value);
+				break;
+			case 'AddressExternalCode':
+				$this->__set('externalCode', $reader->value);
+				break;
+		}
+	}
+
+	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'City':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_City');
+				$obj->ReadXML($reader);
+				$this->__set('city', $obj);
+				break;
+			case 'Coord':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
+				$obj->ReadXML($reader);
+				$this->__set('coord', $obj);
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

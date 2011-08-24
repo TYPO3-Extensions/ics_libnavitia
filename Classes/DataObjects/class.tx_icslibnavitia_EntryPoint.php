@@ -21,34 +21,12 @@ class tx_icslibnavitia_EntryPoint extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		if (($reader->nodeType != XMLReader::ELEMENT) || ($reader->name != 'EntryPoint')) {
-			$trace = debug_backtrace();
-			trigger_error(
-				'Unexpected XMLReader context, expected an EntryPoint element,' .
-				' found node { type = ' . $reader->nodeType . '; name = ' . $reader->name . ' }' .
-				' in ' . $trace[0]['file'] .
-				' on line ' . $trace[0]['line'],
-				E_USER_ERROR);
-			return;
-		}
-		foreach (self::$fields as $fieldname => $type) {
-			$this->setDefaultValue($fieldname, $type);
-		}
+		$this->_ReadXML($reader, 'EntryPoint');
+	}
+	
+	protected function ReadInit() {
+		parent::ReadInit();
 		$this->values['hangList']->Clear();
-		while ($reader->moveToNextAttribute()) {
-			$this->ReadAttribute($reader);
-		}
-		$reader->moveToElement();
-		if (!$reader->isEmptyElement) {
-			do {
-				$reader->read();
-				if ($reader->nodeType == ELEMENT) {
-					$this->ReadElement($reader);
-					continue;
-				}
-			}
-			while ($reader->nodeType != XMLReader::END_ELEMENT);
-		}
 	}
 	
 	protected function ReadAttribute(XMLReader $reader) {
@@ -57,7 +35,7 @@ class tx_icslibnavitia_EntryPoint extends tx_icslibnavitia_Node {
 				$this->__set('type', $reader->value);
 				break;
 			case 'EntryPointResponseQuality':
-				$this->__set('quality', parseInt($reader->value));
+				$this->__set('quality', (int)$reader->value);
 				break;
 			case 'CityName':
 				$this->__set('cityName', $reader->value);
@@ -104,13 +82,11 @@ class tx_icslibnavitia_EntryPoint extends tx_icslibnavitia_Node {
 				}
 				break;
 			case 'HangList':
-				$this->ReadHangList($reader);
+				$this->ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
 				break;
+			default:
+				$this->SkipChildren($reader);
 		}
-	}
-	
-	private function ReadHangList(XMLReader $reader) {
-		$this->SkipChildren($reader); // TODO: Read the children really.
 	}
 	
 	public function __toString() {

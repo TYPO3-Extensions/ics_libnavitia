@@ -13,7 +13,31 @@ class tx_icslibnavitia_Hang extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Hang');
+	}
+	
+	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'StopPointIdx':
+				$this->__set('stopPointIdx', (int)$reader->value);
+				break;
+			case 'Duration':
+				$this->__set('duration', (int)$reader->value);
+				break;
+			case 'ConnectionKind':
+				$this->__set('kind', (int)$reader->value);
+				break;
+			case 'StopPointExternalCode':
+				$this->__set('stopPointExternalCode', $reader->value);
+				break;
+		}
+	}
+
+	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

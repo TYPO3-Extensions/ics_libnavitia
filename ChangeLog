@@ -1,5 +1,10 @@
+2011-08-24 Pierrick Caillon <pierrick@in-cite.net>
+	* Enhanced XML parsing architecture.
+	* Parsing for EntryPoint, StopArea, City, Coord, Hang, Site and Address nodes
+	* Created API service and first request EntryPointList.
+
 2011-08-23 Pierrick Caillon <pierrick@in-cite.net>
-	* Added: Nodes for EntryPoint, PlanJourney and StreeNetwork.
+	* Added: Nodes for EntryPoint, PlanJourney and StreetNetwork.
 	* Started parsing for EntryPoint node.
 
 2011-08-22 Pierrick Caillon <pierrick@in-cite.net>

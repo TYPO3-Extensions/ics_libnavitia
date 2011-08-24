@@ -1,0 +1,24 @@
+# customsubcategory=debug=Debug|Debug
+
+# cat=basic/debug/; type=boolean; label=Activate debug parameter
+debug=1
+
+# cat=basic/debug/; type=string; label=Debug parameter name: Must not have PHP array notation.
+debug_param=navitia_debug
+
+# cat=basic/debug/; type=boolean; label=Debug parameter required: Require debug parameter for devlog and WriteXML
+debug_require=1
+
+# cat=basic/debug/; type=boolean; label=Debug to devlog
+devlog=0
+
+# cat=basic/debug/; type=boolean; label=Write NAViTiA response:Write response XML to file in typo3temp/libnavitia/.
+writeXML=0
+
+TSConstantEditor.basic {
+  description ( 
+<span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span>
+The file names are created using <code>sprintf('%d_%d_%s.xml', $_SERVER['REQUEST_TIME'], $queryNum, $actionName)</code>.<br/>
+)
+  1 = writeXML
+}

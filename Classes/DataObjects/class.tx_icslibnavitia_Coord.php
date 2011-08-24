@@ -22,7 +22,27 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Coord');
+	}
+	
+	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case '':
+				$this->__set('', $reader->value);
+				break;
+		}
+	}
+
+	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'CoordX':
+				$this->__set('x', (double)str_replace(',', '.', $reader->readString()));
+				break;
+			case 'CoordY':
+				$this->__set('y', (double)str_replace(',', '.', $reader->readString()));
+				break;
+		}
+		$this->SkipChildren($reader);
 	}
 	
 	public function __toString() {
