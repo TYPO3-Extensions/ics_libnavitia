@@ -21,11 +21,58 @@ class tx_icslibnavitia_JourneyResult extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'JourneyResult');
 	}
+	
+	protected function ReadInit() {
+		parent::ReadInit();
+		$this->values['sections']->Clear();
+	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'Criteria':
+				$this->__set('criteria', $reader->value);
+				break;
+			case 'IsLastSoluce':
+				$this->__set('last', (bool)$reader->value);
+				break;
+			case 'IsFirstSoluce':
+				$this->__set('first', (bool)$reader->value);
+				break;
+			case 'IsCriteriaFound':
+				$this->__set('found', (bool)$reader->value);
+				break;
+			case 'JourneyResultPosition':
+				$this->__set('position', (int)$reader->value);
+				break;
+			case 'IsBest':
+				$this->__set('best', (bool)$reader->value);
+				break;
+			case 'IsDisrupt':
+				$this->__set('disrupt', (bool)$reader->value);
+				break;
+			case 'IsAdapted':
+				$this->__set('adapted', (bool)$reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'Summary':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Summary');
+				$obj->ReadXML($reader);
+				$this->__set('summary', $obj);
+				break;
+			case 'Section':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Section');
+				$obj->ReadXML($reader);
+				$this->values['sections']->Add($obj);
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

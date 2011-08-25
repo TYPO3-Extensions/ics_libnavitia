@@ -12,11 +12,32 @@ class tx_icslibnavitia_Call extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Call');
 	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
 	}
+
 	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'Before':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_CallValue');
+				$obj->ReadXML($reader);
+				$this->__set('before', $obj);
+				break;
+			case 'This':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_CallValue');
+				$obj->ReadXML($reader);
+				$this->__set('this', $obj);
+				break;
+			case 'After':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_CallValue');
+				$obj->ReadXML($reader);
+				$this->__set('after', $obj);
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

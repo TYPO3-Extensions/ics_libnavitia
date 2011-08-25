@@ -197,7 +197,7 @@ abstract class tx_icslibnavitia_Node {
 	 * @param string $elementName The name of the expected XML Element.
 	 */
 	protected function _ReadXML(XMLReader $reader, $elementName) {
-		if (($reader->nodeType != XMLReader::ELEMENT) || ($reader->name != $elementName)) {
+		if (($reader->nodeType != XMLReader::ELEMENT) || ($elementName && ($reader->name != $elementName))) {
 			tx_icslibnavitia_Debug::error('Unexpected XMLReader context, expected an ' . $elementName . ' element,' .
 				' found node { type = ' . $reader->nodeType . '; name = ' . $reader->name . ' }', 1);
 			return;
@@ -268,7 +268,7 @@ abstract class tx_icslibnavitia_Node {
 	 * @param XMLReader $reader The reader to manipulate.
 	 */
 	protected function SkipChildren(XMLReader $reader) {
-		if (($reader->nodeType == XMLReader::ELEMENT) && !$reader->isEmptyElement) {
+		if (!$reader->isEmptyElement) {
 			$reader->read();
 			while (($reader->nodeType != XMLReader::END_ELEMENT) && ($reader->nodeType != XMLReader::NONE)) {
 				if ($reader->nodeType == XMLReader::ELEMENT) {

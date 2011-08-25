@@ -34,10 +34,7 @@ class tx_icslibnavitia_Hang extends tx_icslibnavitia_Node {
 	}
 
 	protected function ReadElement(XMLReader $reader) {
-		switch ($reader->name) {
-			default:
-				$this->SkipChildren($reader);
-		}
+		$this->SkipChildren($reader);
 	}
 	
 	public function __toString() {

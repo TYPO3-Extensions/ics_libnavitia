@@ -14,11 +14,35 @@ class tx_icslibnavitia_Mode extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Mode');
 	}
+	
+	protected function ReadInit() {
+		parent::ReadInit();
+	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'ModeIdx':
+				$this->__set('idx', (int)$reader->value);
+				break;
+			case 'ModeId':
+				$this->__set('id', (int)$reader->value);
+				break;
+			case 'ModeName':
+				$this->__set('name', $reader->value);
+				break;
+			case 'ModeExternalCode':
+				$this->__set('externalCode', $reader->value);
+				break;
+			case 'ModeTypeExternalCode':
+				$this->__set('typeExternalCode', $reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
+		$this->SkipChildren($reader);
 	}
 	
 	public function __toString() {

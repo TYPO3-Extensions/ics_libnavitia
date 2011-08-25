@@ -4,7 +4,7 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'day' => 'int',
 		'hour' => 'int',
-		'minutes' => 'int',
+		'minute' => 'int',
 	);
 
 	public function __construct() {
@@ -12,11 +12,29 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, false);
 	}
+	
+	protected function ReadInit() {
+		parent::ReadInit();
+	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
 	}
+
 	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'Day':
+				$this->__set('day', (int)$reader->readString());
+				break;
+			case 'Hour':
+				$this->__set('hour', (int)$reader->readString());
+				break;
+			case 'Minute':
+				$this->__set('minute', (int)$reader->readString());
+				break;
+		}
+		$this->SkipChildren($reader);
 	}
 	
 	public function __toString() {
@@ -25,7 +43,7 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 	
 	public function __get($name) {
 		if ($name == 'totalSeconds') {
-			return (($this->fields['day'] * 24 + $this->fields['hour']) * 60 + $this->fields['minutes']) * 60;
+			return (($this->values['day'] * 24 + $this->values['hour']) * 60 + $this->values['minute']) * 60;
 		}
 		return parent::__get($name);
 	}
@@ -43,13 +61,13 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 				return;
 			}
 			$value /= 60;
-			$this->fields['minutes'] = $value % 60;
+			$this->values['minute'] = $value % 60;
 			$value /= 60;
-			$this->fields['hour'] = $value % 24;
+			$this->values['hour'] = $value % 24;
 			$value /= 24;
-			$this->fields['day'] = $value;
+			$this->values['day'] = $value;
 			return;
 		}
-		parent::__get($name);
+		parent::__set($name, $value);
 	}
 }

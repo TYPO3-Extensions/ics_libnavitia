@@ -30,7 +30,7 @@ class tx_icslibnavitia_Debug {
 	
 	public static function Log($message, $url = '', $level = 0, array $data = null) {
 		if (self::$settings['debug'] && $url) {
-			echo '<pre>' . htmlspecialchars($url) . '</pre>';
+			echo '<pre>' . htmlspecialchars($url) . '</pre>' . PHP_EOL;
 		}
 		if (self::$settings['devlog']) {
 			if ($url) {

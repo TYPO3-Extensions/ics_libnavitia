@@ -12,11 +12,32 @@ class tx_icslibnavitia_Undefined extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Undefined');
 	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'UndefinedName':
+				$this->__set('name', $reader->value);
+				break;
+			case 'CityName':
+				$this->__set('cityName', $reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'Coord':
+				if (strlen($reader->readString()) > 0) {
+					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
+					$obj->ReadXML($reader);
+					$this->__set('coord', $obj);
+				}
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

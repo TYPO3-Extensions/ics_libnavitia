@@ -29,6 +29,7 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 	protected function ReadAttribute(XMLReader $reader) {
 	}
 	protected function ReadElement(XMLReader $reader) {
+		$this->SkipChildren($reader);
 	}
 	
 	public function __toString() {

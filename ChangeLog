@@ -1,5 +1,9 @@
 2011-08-25 Pierrick Caillon <pierrick@in-cite.net>
-	* Resolved Node::ReadList and Node::SkipChildren bugs when the XML node is not an Element.
+	* Resolved Node::ReadList bug when the XML node is not an Element.
+	* Node::SkipChildren does not had a bug. It was the intended behaviour.
+	* Parsing for JourneyResult, Summary, Call, CallValue, Section, Time, EntryPointPlanJourney, StopPoint, Mode, Undefined and Nota nodes.
+	* API request PlanJourney.
+	* EntryPointDefinition class to convert an EntryPoint into a valid parameter value for PlanJourney.
 
 2011-08-24 Pierrick Caillon <pierrick@in-cite.net>
 	* Enhanced XML parsing architecture.
