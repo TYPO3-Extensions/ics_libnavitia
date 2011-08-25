@@ -14,6 +14,10 @@ class tx_icslibnavitia_Undefined extends tx_icslibnavitia_Node {
 	public function ReadXML(XMLReader $reader) {
 		trigger_error('Not implemented', E_USER_NOTICE);
 	}
+	protected function ReadAttribute(XMLReader $reader) {
+	}
+	protected function ReadElement(XMLReader $reader) {
+	}
 	
 	public function __toString() {
 		return get_class($this);

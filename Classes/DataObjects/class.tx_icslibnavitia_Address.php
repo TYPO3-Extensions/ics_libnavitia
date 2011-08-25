@@ -43,9 +43,13 @@ class tx_icslibnavitia_Address extends tx_icslibnavitia_Node {
 				$this->__set('city', $obj);
 				break;
 			case 'Coord':
-				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
-				$obj->ReadXML($reader);
-				$this->__set('coord', $obj);
+				if (strlen($reader->readString()) > 0) {
+					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
+					$obj->ReadXML($reader);
+					$this->__set('coord', $obj);
+				}
+				else
+					$this->SkipChildren($reader);
 				break;
 			default:
 				$this->SkipChildren($reader);

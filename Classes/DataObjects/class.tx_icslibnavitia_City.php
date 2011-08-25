@@ -37,11 +37,13 @@ class tx_icslibnavitia_City extends tx_icslibnavitia_Node {
 	protected function ReadElement(XMLReader $reader) {
 		switch ($reader->name) {
 			case 'Coord':
-				if (!$reader->isEmptyElement) {
+				if (strlen($reader->readString()) > 0) {
 					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
 					$obj->ReadXML($reader);
 					$this->__set('coord', $obj);
 				}
+				else
+					$this->SkipChildren($reader);
 				break;
 			default:
 				$this->SkipChildren($reader);

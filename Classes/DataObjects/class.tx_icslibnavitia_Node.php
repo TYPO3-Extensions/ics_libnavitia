@@ -240,18 +240,19 @@ abstract class tx_icslibnavitia_Node {
 		if (!$reader->isEmptyElement) {
 			$reader->read();
 			while ($reader->nodeType != XMLReader::END_ELEMENT) {
-				if (($reader->nodeType == XMLReader::ELEMENT) && array_key_exists($reader->name, $elementTypeMapping)) {
-					$object = t3lib_div::makeInstance($elementTypeMapping[$reader->name]);
-					if ($object instanceof tx_icslibnavitia_Node) {
-						$object->ReadXML($reader);
-						$list->Add($object);
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					$parsed = false;
+					if (array_key_exists($reader->name, $elementTypeMapping)) {
+						$object = t3lib_div::makeInstance($elementTypeMapping[$reader->name]);
+						if ($object instanceof tx_icslibnavitia_Node) {
+							$object->ReadXML($reader);
+							$list->Add($object);
+							$parsed = true;
+						}
 					}
-					else {
+					if (!$parsed) {
 						$this->SkipChildren($reader);
 					}
-				}
-				else {
-					$this->SkipChildren($reader);
 				}
 				$reader->read();
 			}
@@ -267,15 +268,13 @@ abstract class tx_icslibnavitia_Node {
 	 * @param XMLReader $reader The reader to manipulate.
 	 */
 	protected function SkipChildren(XMLReader $reader) {
-		if (!$reader->isEmptyElement) {
+		if (($reader->nodeType == XMLReader::ELEMENT) && !$reader->isEmptyElement) {
 			$reader->read();
 			while (($reader->nodeType != XMLReader::END_ELEMENT) && ($reader->nodeType != XMLReader::NONE)) {
 				if ($reader->nodeType == XMLReader::ELEMENT) {
 					$this->SkipChildren($reader);
-					// $reader->next(); // TODO: Check to behaviour.
 				}
-				// else 
-					$reader->read();
+				$reader->read();
 			}
 		}
 	}

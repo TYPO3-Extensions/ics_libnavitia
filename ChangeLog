@@ -1,3 +1,6 @@
+2011-08-25 Pierrick Caillon <pierrick@in-cite.net>
+	* Resolved Node::ReadList and Node::SkipChildren bugs when the XML node is not an Element.
+
 2011-08-24 Pierrick Caillon <pierrick@in-cite.net>
 	* Enhanced XML parsing architecture.
 	* Parsing for EntryPoint, StopArea, City, Coord, Hang, Site and Address nodes

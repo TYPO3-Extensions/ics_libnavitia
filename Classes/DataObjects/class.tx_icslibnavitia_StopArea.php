@@ -70,11 +70,13 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 				$this->__set('city', $obj);
 				break;
 			case 'Coord':
-				if (!$reader->isEmptyElement) {
+				if (strlen($reader->readString()) > 0) {
 					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
 					$obj->ReadXML($reader);
 					$this->__set('coord', $obj);
 				}
+				else
+					$this->SkipChildren($reader);
 				break;
 			case 'HangList':
 				$this->ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
