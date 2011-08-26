@@ -14,12 +14,31 @@ class tx_icslibnavitia_Network extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Network');
 	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'NetworkId':
+				$this->__set('id', (int)$reader->value);
+				break;
+			case 'NetworkIdx':
+				$this->__set('idx', (int)$reader->value);
+				break;
+			case 'NetworkName':
+				$this->__set('name', $reader->value);
+				break;
+			case 'NetworkExternalCode':
+				$this->__set('externalCode', $reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
-		$this->SkipChildren($reader);
+		switch ($reader->name) {
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

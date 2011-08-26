@@ -11,12 +11,43 @@ class tx_icslibnavitia_Backward extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'Backward');
 	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'BackwardName':
+				$this->__set('name', $reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
-		$this->SkipChildren($reader);
+		switch ($reader->name) {
+			case 'Direction':
+				$this->ReadOrigDest($reader, 'direction');
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
+	}
+	
+	private function ReadOrigDest(XMLReader $reader, $fieldname) {
+		if (!$reader->isEmptyElement) {
+			$reader->read();
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					if ($reader->name == 'StopArea') {
+						$obj = t3lib_div::makeInstance('tx_icslibnavitia_StopArea');
+						$obj->ReadXML($reader);
+						$this->__set($fieldname, $obj);
+					}
+					else
+						$this->SkipChildren($reader);
+				}
+				$reader->read();
+			}
+		}
 	}
 	
 	public function __toString() {

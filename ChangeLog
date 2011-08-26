@@ -1,3 +1,7 @@
+2011-08-26 Pierrick Caillon <pierrick@in-cite.net>
+	* Added: VehicleJourney and Route nodes.
+	* Parsing for VehicleJourney, Route, Line, ModeType, Network, Forward and Backward nodes. Update Section node.
+
 2011-08-25 Pierrick Caillon <pierrick@in-cite.net>
 	* Resolved Node::ReadList bug when the XML node is not an Element.
 	* Node::SkipChildren does not had a bug. It was the intended behaviour.

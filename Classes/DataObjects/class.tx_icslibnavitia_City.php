@@ -7,6 +7,7 @@ class tx_icslibnavitia_City extends tx_icslibnavitia_Node {
 		'name' => 'string',
 		'externalCode' => 'string',
 		'coord' => 'object:tx_icslibnavitia_Coord?',
+		// 'department' => 'object:tx_icslibnavitia_?',
 	);
 
 	public function __construct() {

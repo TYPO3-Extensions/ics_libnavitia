@@ -8,7 +8,7 @@ class tx_icslibnavitia_Section extends tx_icslibnavitia_Node {
 		'duration' => 'object:tx_icslibnavitia_Time?',
 		'departure' => 'object:tx_icslibnavitia_EntryPointPlanJourney?',
 		'arrival' => 'object:tx_icslibnavitia_EntryPointPlanJourney?',
-		// 'vehicleJourney' => 'object:',
+		'vehicleJourney' => 'object:tx_icslibnavitia_VehicleJourney?',
 		'nota' => 'object:tx_icslibnavitia_Nota',
 		// 'fareSectionList' => '',
 		// 'fareZoneList' => '',
@@ -53,6 +53,11 @@ class tx_icslibnavitia_Section extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_EntryPointPlanJourney');
 				$obj->ReadXML($reader);
 				$this->__set('arrival', $obj);
+				break;
+			case 'VehicleJourney':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_VehicleJourney');
+				$obj->ReadXML($reader);
+				$this->__set('vehicleJourney', $obj);
 				break;
 			case 'Nota':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Nota');
