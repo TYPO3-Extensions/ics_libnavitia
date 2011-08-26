@@ -16,12 +16,48 @@ class tx_icslibnavitia_RoutePoint extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		trigger_error('Not implemented', E_USER_NOTICE);
+		$this->_ReadXML($reader, 'RoutePoint');
 	}
+	
+	protected function ReadInit() {
+		parent::ReadInit();
+	}
+	
 	protected function ReadAttribute(XMLReader $reader) {
+		switch ($reader->name) {
+			case 'RoutePointId':
+				$this->__set('id', (int)$reader->value);
+				break;
+			case 'RoutePointIdx':
+				$this->__set('idx', (int)$reader->value);
+				break;
+			case 'RoutePointExternalCode':
+				$this->__set('externalCode', $reader->value);
+				break;
+			case 'RouteIdx':
+				$this->__set('routeIdx', (int)$reader->value);
+				break;
+			case 'MainStopPoint':
+				$this->__set('main', $reader->value);
+				break;
+		}
 	}
+
 	protected function ReadElement(XMLReader $reader) {
-		$this->SkipChildren($reader);
+		switch ($reader->name) {
+			case 'StopPoint':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_StopPoint');
+				$obj->ReadXML($reader);
+				$this->__set('stopPoint', $obj);
+				break;
+			case 'StopArea':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_StopArea');
+				$obj->ReadXML($reader);
+				$this->__set('stopArea', $obj);
+				break;
+			default:
+				$this->SkipChildren($reader);
+		}
 	}
 	
 	public function __toString() {

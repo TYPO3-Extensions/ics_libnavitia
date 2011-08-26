@@ -236,7 +236,7 @@ abstract class tx_icslibnavitia_Node {
 	 * @param array $elementTypeMapping The mapping from the elements names to the
 	 *        node object type.
 	 */
-	protected function ReadList(XMLReader $reader, tx_icslibnavitia_INodeList $list, array $elementTypeMapping) {
+	public static function ReadList(XMLReader $reader, tx_icslibnavitia_INodeList $list, array $elementTypeMapping) {
 		if (!$reader->isEmptyElement) {
 			$reader->read();
 			while ($reader->nodeType != XMLReader::END_ELEMENT) {

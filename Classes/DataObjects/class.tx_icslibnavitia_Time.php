@@ -15,10 +15,6 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 		$this->_ReadXML($reader, false);
 	}
 	
-	protected function ReadInit() {
-		parent::ReadInit();
-	}
-	
 	protected function ReadAttribute(XMLReader $reader) {
 	}
 

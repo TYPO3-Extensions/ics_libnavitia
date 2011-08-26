@@ -79,7 +79,7 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 					$this->SkipChildren($reader);
 				break;
 			case 'HangList':
-				$this->ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
+				tx_icslibnavitia_Node::ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
 				break;
 			default:
 				$this->SkipChildren($reader);

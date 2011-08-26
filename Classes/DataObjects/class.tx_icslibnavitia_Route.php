@@ -61,7 +61,7 @@ class tx_icslibnavitia_Route extends tx_icslibnavitia_Node {
 	protected function ReadElement(XMLReader $reader) {
 		switch ($reader->name) {
 			case 'RoutePointList':
-				$this->ReadList($reader, $this->values['routePointList'], array('RoutePoint' => 'tx_icslibnavitia_RoutePoint'));
+				tx_icslibnavitia_Node::ReadList($reader, $this->values['routePointList'], array('RoutePoint' => 'tx_icslibnavitia_RoutePoint'));
 				break;
 			case 'Line':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Line');

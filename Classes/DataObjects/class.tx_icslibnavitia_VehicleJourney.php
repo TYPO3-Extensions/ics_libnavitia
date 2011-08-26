@@ -78,7 +78,7 @@ class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
 				$this->__set('mode', $obj);
 				break;
 			case 'StopList':
-				$this->ReadList($reader, $this->values['stopList'], array('Stop', 'tx_icslibnavitia_Stop'));
+				tx_icslibnavitia_Node::ReadList($reader, $this->values['stopList'], array('Stop', 'tx_icslibnavitia_Stop'));
 				break;
 			default:
 				$this->SkipChildren($reader);

@@ -1,6 +1,9 @@
 2011-08-26 Pierrick Caillon <pierrick@in-cite.net>
 	* Added: VehicleJourney and Route nodes.
-	* Parsing for VehicleJourney, Route, Line, ModeType, Network, Forward and Backward nodes. Update Section node.
+	* Parsing for VehicleJourney, Route, Line, ModeType, Network, Forward, Backward, Segment, RoutePoint and Stop nodes. Update Section node.
+	* API Requests StreetNetwork, PTReferential for NetworkList and LineList, RoutePointList and DepartureBoard.
+	* Added method to retrieve the last query parameters used to query NAViTiA.
+	* Changed Node::ReadList to public and static to use it in the Service.
 
 2011-08-25 Pierrick Caillon <pierrick@in-cite.net>
 	* Resolved Node::ReadList bug when the XML node is not an Element.
