@@ -65,7 +65,7 @@ class tx_icslibnavitia_Section extends tx_icslibnavitia_Node {
 				$this->__set('nota', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

@@ -42,7 +42,7 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 				$this->__set('y', (double)str_replace(',', '.', $reader->readString()));
 				break;
 		}
-		$this->SkipChildren($reader);
+		tx_icslibnavitia_Node::SkipChildren($reader);
 	}
 	
 	public function __toString() {

@@ -58,7 +58,7 @@ class tx_icslibnavitia_Segment extends tx_icslibnavitia_Node {
 				$this->ReadNode($reader, 'endNode');
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	
@@ -73,7 +73,7 @@ class tx_icslibnavitia_Segment extends tx_icslibnavitia_Node {
 						$this->__set($fieldname, $obj);
 					}
 					else
-						$this->SkipChildren($reader);
+						tx_icslibnavitia_Node::SkipChildren($reader);
 				}
 				$reader->read();
 			}

@@ -22,7 +22,7 @@ class tx_icslibnavitia_Nota extends tx_icslibnavitia_Node {
 	}
 
 	protected function ReadElement(XMLReader $reader) {
-		$this->SkipChildren($reader);
+		tx_icslibnavitia_Node::SkipChildren($reader);
 	}
 	
 	public function __toString() {

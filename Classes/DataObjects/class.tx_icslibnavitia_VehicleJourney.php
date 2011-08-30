@@ -81,7 +81,7 @@ class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
 				tx_icslibnavitia_Node::ReadList($reader, $this->values['stopList'], array('Stop', 'tx_icslibnavitia_Stop'));
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	
@@ -96,7 +96,7 @@ class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
 						$this->__set($fieldname, $obj);
 					}
 					else
-						$this->SkipChildren($reader);
+						tx_icslibnavitia_Node::SkipChildren($reader);
 				}
 				$reader->read();
 			}

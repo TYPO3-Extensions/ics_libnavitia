@@ -42,7 +42,7 @@ class tx_icslibnavitia_Mode extends tx_icslibnavitia_Node {
 	}
 
 	protected function ReadElement(XMLReader $reader) {
-		$this->SkipChildren($reader);
+		tx_icslibnavitia_Node::SkipChildren($reader);
 	}
 	
 	public function __toString() {

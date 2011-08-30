@@ -251,7 +251,7 @@ abstract class tx_icslibnavitia_Node {
 						}
 					}
 					if (!$parsed) {
-						$this->SkipChildren($reader);
+						self::SkipChildren($reader);
 					}
 				}
 				$reader->read();
@@ -267,12 +267,12 @@ abstract class tx_icslibnavitia_Node {
 	 *
 	 * @param XMLReader $reader The reader to manipulate.
 	 */
-	protected function SkipChildren(XMLReader $reader) {
+	protected static function SkipChildren(XMLReader $reader) {
 		if (!$reader->isEmptyElement) {
 			$reader->read();
 			while (($reader->nodeType != XMLReader::END_ELEMENT) && ($reader->nodeType != XMLReader::NONE)) {
 				if ($reader->nodeType == XMLReader::ELEMENT) {
-					$this->SkipChildren($reader);
+					self::SkipChildren($reader);
 				}
 				$reader->read();
 			}

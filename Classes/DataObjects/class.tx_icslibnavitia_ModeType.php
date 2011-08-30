@@ -33,7 +33,7 @@ class tx_icslibnavitia_ModeType extends tx_icslibnavitia_Node {
 	protected function ReadElement(XMLReader $reader) {
 		switch ($reader->name) {
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

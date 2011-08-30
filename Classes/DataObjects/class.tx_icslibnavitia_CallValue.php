@@ -51,7 +51,7 @@ class tx_icslibnavitia_CallValue extends tx_icslibnavitia_Node {
 				$this->__set('criteria', (int)$reader->readString());
 				break;
 		}
-		$this->SkipChildren($reader);
+		tx_icslibnavitia_Node::SkipChildren($reader);
 	}
 	
 	public function __toString() {

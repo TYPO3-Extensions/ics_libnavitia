@@ -36,7 +36,7 @@ class tx_icslibnavitia_Undefined extends tx_icslibnavitia_Node {
 				}
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

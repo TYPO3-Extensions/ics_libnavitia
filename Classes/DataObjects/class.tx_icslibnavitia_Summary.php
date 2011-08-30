@@ -85,7 +85,7 @@ class tx_icslibnavitia_Summary extends tx_icslibnavitia_Node {
 				$this->__set('call', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	
@@ -105,7 +105,7 @@ class tx_icslibnavitia_Summary extends tx_icslibnavitia_Node {
 							$dateDef['d'] = (int)$reader->readString();
 							break;
 					}
-					$this->SkipChildren($reader);
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				}
 				$reader->read();
 			}
@@ -128,7 +128,7 @@ class tx_icslibnavitia_Summary extends tx_icslibnavitia_Node {
 							$timeDef['s'] = (int)$reader->readString();
 							break;
 					}
-					$this->SkipChildren($reader);
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				}
 				$reader->read();
 			}

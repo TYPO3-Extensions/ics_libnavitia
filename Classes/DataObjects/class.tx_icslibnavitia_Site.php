@@ -49,10 +49,10 @@ class tx_icslibnavitia_Site extends tx_icslibnavitia_Node {
 					$this->__set('coord', $obj);
 				}
 				else
-					$this->SkipChildren($reader);
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

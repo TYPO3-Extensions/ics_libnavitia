@@ -1,3 +1,7 @@
+2011-08-30 Pierrick Caillon <pierrick@in-cite.net>
+	* Scope fixes
+	* Lambert II Extended to WGS84 and reverse converter. Still under testing.
+
 2011-08-26 Pierrick Caillon <pierrick@in-cite.net>
 	* Added: VehicleJourney and Route nodes.
 	* Parsing for VehicleJourney, Route, Line, ModeType, Network, Forward, Backward, Segment, RoutePoint and Stop nodes. Update Section node.

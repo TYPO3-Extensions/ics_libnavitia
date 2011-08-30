@@ -1,54 +1,74 @@
 <?php
 
-// http://professionnels.ign.fr/DISPLAY/000/526/701/5267019/NTG_71.pdf paramètres.
-// http://geodesie.ign.fr/contenu/fichiers/documentation/pedagogiques/transfo.pdf p12 paramètres.
+// http://professionnels.ign.fr/DISPLAY/000/526/701/5267019/NTG_71.pdf paramÃ¨tres.
+// http://geodesie.ign.fr/contenu/fichiers/documentation/pedagogiques/transfo.pdf p12 paramÃ¨tres.
 class tx_icslibnavitia_CoordinateConverter {
 
-	private $n = 0.7289127966; // Exposant de la projection.
-	private $c = 11745793.39; // Constante de la projection.
-	private $Xs = 600000.0; // Coordonnées en projection du pôle.
-	private $Ys = 8199695.768; // Coordonnées en projection du pôle.
-	private $lambda0 = deg2rad((14.025 / 60 + 20) / 60 + 2); // Longitude du méridien de paris par rapport au méridien d'origine. (rad)
-	private $a = 6378249.2; // Demi grand axe. (m)
-	private $f = 1 / 293.466021; // Applatissement.
-	private $e = 0.08248325676; // Première excentricité de l'ellipsoïde.
-	// Lambert II Carto (Centre) 	52 grades 	45°53’56,108” 	47°41’45,652” 	600 000 m 	2 200 000 m (http://fr.wikipedia.org/wiki/Projection_de_Lambert)
-	private $phi0 = deg2rad(48 / 60 + 46); // Latitude origine. (rad)
-	private $phi1 = deg2rad((56.108 / 60 + 53) / 60 + 45); // Latitude du premier parallèle automécoïque. (rad)
-	private $phi1 = deg2rad((45.652 / 60 + 41) / 60 + 47); // Latitude du second parallèle automécoïque. (rad)
-	private $X0 = 600000; // Translation X. (m) (E0)
-	private $Y0 = 2200000; // Translation Y. (m) (N0)
-	private $f = 0.99987742; // Facteur  d'échelle.
+	private static $n = 0.7289127966; // Exposant de la projection.
+	private static $c = 11745793.39; // Constante de la projection.
+	private static $Xs = 600000.0; // CoordonnÃ©es en projection du pÃ´le.
+	private static $Ys = 8199695.768; // CoordonnÃ©es en projection du pÃ´le.
+	private static $lambda0; // = deg2rad((14.025 / 60 + 20) / 60 + 2); // Longitude du mÃ©ridien de paris par rapport au mÃ©ridien d'origine. (rad)
+	private static $e = 0.08248325676; // PremiÃ¨re excentricitÃ© de l'ellipsoÃ¯de.
 	
-	private static function init() {
+	private static $a = 6378249.2; // Demi grand axe. (m)
+	private static $f; // = 1 / 293.466021; // Applatissement.
+	// Lambert II Carto (Centre) 	52 grades 	45Â°53â€™56,108â€ 	47Â°41â€™45,652â€ 	600 000 m 	2 200 000 m (http://fr.wikipedia.org/wiki/Projection_de_Lambert)
+	private static $phi0; // = deg2rad(48 / 60 + 46); // Latitude origine. (rad)
+	private static $phi1; // = deg2rad((56.108 / 60 + 53) / 60 + 45); // Latitude du premier parallÃ¨le automÃ©coÃ¯que. (rad)
+	private static $phi2; // = deg2rad((45.652 / 60 + 41) / 60 + 47); // Latitude du second parallÃ¨le automÃ©coÃ¯que. (rad)
+	private static $X0 = 600000; // Translation X. (m) (E0)
+	private static $Y0 = 2200000; // Translation Y. (m) (N0)
+	private static $s = 0.99987742; // Facteur d'Ã©chelle.
+	
+	public static function init() {
+		self::$lambda0 = deg2rad((14.025 / 60 + 20) / 60 + 2);
+		self::$f = 1 / 293.466021;
+		self::$phi0 = deg2rad(48 / 60 + 46);
+		self::$phi1 = deg2rad((56.108 / 60 + 53) / 60 + 45);
+		self::$phi2 = deg2rad((45.652 / 60 + 41) / 60 + 47);
 	}
-	
+	// Î¸Î»ÏÏ€Ï†â‚€â‚
 	public static function convertfromWGS84($lat, $lng) {
-		$L = .5 * log((1 + sin($lat)) / (1 - sin($lat))) - self::$e * .5 * log((1 + self::$e * sin($lat)) / (1 - self::$e * sin($lat)));
+		$phi = deg2rad($lat);
+		$lambda = deg2rad($lng);
+		echo $phi . ', ' . $lambda . PHP_EOL;
+		
+		$L = log(tan((M_PI / 4) + ($phi / 2))) * pow((1 - self::$e * sin($phi)) / (1 + self::$e * sin($phi)), self::$e / 2);
+		echo 'L=' . $L . PHP_EOL;
+		// $L = .5 * log((1 + sin($lat)) / (1 - sin($lat))) - self::$e * .5 * log((1 + self::$e * sin($lat)) / (1 - self::$e * sin($lat)));
 		$R = self::$c * exp(- self::$n * $L);
-		$gamma = self::$n * ($lng - self::$lambda0);
+		echo 'R=' . $R . PHP_EOL;
+		$gamma = self::$n * ($lambda - self::$lambda0); // Î¸ = n(?-?0)
+		echo 'gamma=' . $gamma . PHP_EOL;
 		$X = self::$Xs + $R * sin($gamma);
 		$Y = self::$Ys - $R * cos($gamma);
+		return array('X' => $X, 'Y' => $Y);
 	}
 	
 	public static function convertToWGS84($X, $Y) {
 		$dX = $X - self::$Xs;
 		$dY = $Y - self::$Ys;
 		$R = sqrt($dX * $dX + $dY * $dY);
-		$gamma = atan(($X - self::$Xs) / (self::$Ys / $Y));
+		echo 'R=' . $R . PHP_EOL;
+		$gamma = atan(($X - self::$Xs) / (self::$Ys - $Y));
+		echo 'gamma=' . $gamma . PHP_EOL;
 		$lambda = self::$lambda0 + $gamma / self::$n;
-		$L = (-1 / self::$n) * log($R / self::$c);
-		$phi = self::Lm1($L);
-		return array('lat' => $phi, 'lng' => $lambda);
+		$L = (-1 / self::$n) * log(abs($R / self::$c));
+		echo 'L=' . $L . PHP_EOL;
+		$phi = self::Linv($L);
+		echo $phi . ', ' . $lambda . PHP_EOL;
+		return array('lat' => rad2deg($phi), 'lng' => rad2deg($lambda));
 	}
 	
-	private static Lm1($L) {
+	private static function Linv($L) {
 		$phi0 = 0;
 		$phiI = 2 * atan(exp($L)) - M_PI / 2;
 		while (abs($phiI - $phi0) > 1e-5) {
 			$phi0 = $phiI;
-			$phiI = 2 * atan(((1 + self::$e * sin($phiI)) / (1 - self::$e * sin($phiI))) * (self::$e / 2) * exp($L)) - M_PI / 2;
+			$phiI = 2 * atan(pow((1 + self::$e * sin($phi0)) / (1 - self::$e * sin($phi0)), self::$e / 2) * exp($L)) - M_PI / 2;
 		}
 		return $phiI;
 	}
 }
+tx_icslibnavitia_CoordinateConverter::init();

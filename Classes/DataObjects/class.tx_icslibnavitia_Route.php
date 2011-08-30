@@ -69,7 +69,7 @@ class tx_icslibnavitia_Route extends tx_icslibnavitia_Node {
 				$this->__set('line', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

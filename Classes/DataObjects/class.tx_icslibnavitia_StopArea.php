@@ -76,13 +76,13 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 					$this->__set('coord', $obj);
 				}
 				else
-					$this->SkipChildren($reader);
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			case 'HangList':
 				tx_icslibnavitia_Node::ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

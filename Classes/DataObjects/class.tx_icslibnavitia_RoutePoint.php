@@ -56,7 +56,7 @@ class tx_icslibnavitia_RoutePoint extends tx_icslibnavitia_Node {
 				$this->__set('stopArea', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

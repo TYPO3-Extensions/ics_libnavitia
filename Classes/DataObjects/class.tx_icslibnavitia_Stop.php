@@ -103,10 +103,10 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 				break;
 			case 'VehicleJourneyNameAtStop':
 				$this->__set('vehicleJourneyNameAtStop', $reader->readString());
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

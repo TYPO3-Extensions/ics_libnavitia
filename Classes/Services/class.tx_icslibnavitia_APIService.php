@@ -309,6 +309,17 @@ class tx_icslibnavitia_APIService {
 	}
 	
 	/**
+	 * Query the PTReferential API function for a set of Networks.
+	 *
+	 * @param array $networkExternalCodes The list of network's unique identifier.
+	 * @return tx_icslibnavitia_INodeList The list of requested networks. Each element is a {@link tx_icslibnavitia_Network}.
+	 */
+	public function getNetworksByCodes(array $networkExternalCodes) {
+		if (empty($networkExternalCodes)) return t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Network');
+		return $this->_getNetworkList(implode(';', $networkExternalCodes));
+	}
+	
+	/**
 	 * Query the PTReferential API function for NetworkList.
 	 *
 	 * @param string $networkExternalCode The unique identifier of the network. Optional.

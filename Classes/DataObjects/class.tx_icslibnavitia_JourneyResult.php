@@ -71,7 +71,7 @@ class tx_icslibnavitia_JourneyResult extends tx_icslibnavitia_Node {
 				$this->values['sections']->Add($obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

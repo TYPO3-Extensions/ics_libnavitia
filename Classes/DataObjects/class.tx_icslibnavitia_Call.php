@@ -36,7 +36,7 @@ class tx_icslibnavitia_Call extends tx_icslibnavitia_Node {
 				$this->__set('after', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	

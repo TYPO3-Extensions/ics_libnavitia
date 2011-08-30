@@ -82,7 +82,7 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 				$this->__set('backward', $obj);
 				break;
 			default:
-				$this->SkipChildren($reader);
+				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
 	}
 	
