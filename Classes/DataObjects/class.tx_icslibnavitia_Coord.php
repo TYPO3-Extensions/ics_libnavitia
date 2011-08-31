@@ -18,6 +18,20 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 		}
 		parent::__set($name, $value);
 		if (isset($oldValue) && ($oldValue != $this->__get($name))) {
+			switch ($name) {
+				case 'x':
+				case 'y':
+					list($lat, $lng) = tx_icslibnavitia_CoordinateConverter::convertToWGS84($this->__get('x'), $this->__get('y'));
+					parent::__set('lat', $lat);
+					parent::__set('lng', $lng);
+					break;
+				case 'lat':
+				case 'lng':
+					list($x, $y) = tx_icslibnavitia_CoordinateConverter::convertFromWGS84($this->__get('lat'), $this->__get('lng'));
+					parent::__set('x', $x);
+					parent::__set('y', $y);
+					break;
+			}
 		}
 	}
 	

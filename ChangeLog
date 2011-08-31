@@ -1,3 +1,6 @@
+2011-08-31 Pierrick Caillon <pierrick@in-cite.net>
+	* Integrated the coordinate conversion calls into Coord node.
+
 2011-08-30 Pierrick Caillon <pierrick@in-cite.net>
 	* Scope fixes
 	* Lambert II Extended to WGS84 and reverse converter. Still under testing.
