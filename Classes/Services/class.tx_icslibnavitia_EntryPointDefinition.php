@@ -11,7 +11,6 @@
  * @subpackage Services
  */
 class tx_icslibnavitia_EntryPointDefinition {
-	private static $convObj = null;
 	private $definition;
 	private $hanglist;
 
@@ -89,13 +88,14 @@ class tx_icslibnavitia_EntryPointDefinition {
 	}
 	
 	public function __toString() {
-		if (self::$convObj == null)
-			self::$convObj = t3lib_div::makeInstance('t3lib_cs');
-		$definition = implode('|', $this->definition);
+		$def = array();
+		foreach (array('TypePoint', 'IdxPoint', 'Name', 'CityName', 'Number', 'TypeName', 'X', 'Y', ) as $key)
+			$def[] = strval($this->definition[$key]);
+		$definition = implode('|', $def);
 		if (!empty($this->hanglist)) {
 			$definition .= '|' . implode(';', $this->hanglist);
 		}
-		return self::$convObj->conv($definition, $GLOBALS['TSFE'] ? $GLOBALS['TSFE']->renderCharset : $GLOBALS['LANG']->charSet, self::$convObj->parse_charset('ISO-8859-1'));
+		return $definition;
 	}
 }
 

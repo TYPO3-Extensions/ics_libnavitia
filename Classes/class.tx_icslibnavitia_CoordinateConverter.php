@@ -32,15 +32,11 @@ class tx_icslibnavitia_CoordinateConverter {
 	public static function convertfromWGS84($lat, $lng) {
 		$phi = deg2rad($lat);
 		$lambda = deg2rad($lng);
-		echo $phi . ', ' . $lambda . PHP_EOL;
 		
 		$L = log(tan((M_PI / 4) + ($phi / 2))) * pow((1 - self::$e * sin($phi)) / (1 + self::$e * sin($phi)), self::$e / 2);
-		echo 'L=' . $L . PHP_EOL;
 		// $L = .5 * log((1 + sin($lat)) / (1 - sin($lat))) - self::$e * .5 * log((1 + self::$e * sin($lat)) / (1 - self::$e * sin($lat)));
 		$R = self::$c * exp(- self::$n * $L);
-		echo 'R=' . $R . PHP_EOL;
 		$gamma = self::$n * ($lambda - self::$lambda0); // θ = n(?-?0)
-		echo 'gamma=' . $gamma . PHP_EOL;
 		$X = self::$Xs + $R * sin($gamma);
 		$Y = self::$Ys - $R * cos($gamma);
 		return array('X' => $X, 'Y' => $Y);
@@ -50,14 +46,10 @@ class tx_icslibnavitia_CoordinateConverter {
 		$dX = $X - self::$Xs;
 		$dY = $Y - self::$Ys;
 		$R = sqrt($dX * $dX + $dY * $dY);
-		echo 'R=' . $R . PHP_EOL;
 		$gamma = atan(($X - self::$Xs) / (self::$Ys - $Y));
-		echo 'gamma=' . $gamma . PHP_EOL;
 		$lambda = self::$lambda0 + $gamma / self::$n;
 		$L = (-1 / self::$n) * log(abs($R / self::$c));
-		echo 'L=' . $L . PHP_EOL;
 		$phi = self::Linv($L);
-		echo $phi . ', ' . $lambda . PHP_EOL;
 		return array('lat' => rad2deg($phi), 'lng' => rad2deg($lambda));
 	}
 	

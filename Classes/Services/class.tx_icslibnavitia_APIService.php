@@ -8,6 +8,7 @@
  * @subpackage Services
  */
 class tx_icslibnavitia_APIService {
+	private static $convObj = null;
 	const INTERFACE_VERSION = '1_16';
 	private $serviceUrl;
 	private $statId;
@@ -18,6 +19,8 @@ class tx_icslibnavitia_APIService {
 	 * @param string $url URL of the gwnavitia.dll to use.
 	 */
 	public function __construct($url, $login) {
+		if (self::$convObj == null)
+			self::$convObj = t3lib_div::makeInstance('t3lib_cs');
 		$this->serviceUrl = $url;
 		$this->statId = $login;
 	}
@@ -31,10 +34,11 @@ class tx_icslibnavitia_APIService {
 	 */
 	public function CallAPI($action, array $params) {
 		$params['Interface'] = self::INTERFACE_VERSION;
-		$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
 		if ($this->statId)
 			$params['login'] = $this->statId;
 		$this->lastParams = $params;
+		self::$convObj->convArray($params, $GLOBALS['TSFE'] ? $GLOBALS['TSFE']->renderCharset : $GLOBALS['LANG']->charSet, self::$convObj->parse_charset('ISO-8859-1'));
+		$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
 		$this->lastParams['RequestUrl'] = t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
 		$this->lastParams['Function'] = 'API';
 		$this->lastParams['Action'] = $action;
