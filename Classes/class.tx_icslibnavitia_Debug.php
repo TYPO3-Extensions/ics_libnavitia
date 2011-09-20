@@ -77,6 +77,10 @@ class tx_icslibnavitia_Debug {
 			' on line ' . $trace[1 + $backlevel]['line'],
 			E_USER_NOTICE);
 	}
+	
+	public static function IsDebugEnabled() {
+		return self::$settings['debug'];
+	}
 }
 
 tx_icslibnavitia_Debug::Init();
