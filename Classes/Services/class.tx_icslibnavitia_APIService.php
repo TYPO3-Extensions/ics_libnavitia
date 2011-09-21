@@ -180,12 +180,13 @@ class tx_icslibnavitia_APIService {
 	 * @param integer $kind The kind of search to run. Optional. One of the PLANJOURNEYKIND_* constants. Optional. Default to PLANJOURNEYKIND_ASAP.
 	 * @param integer $before Number of results before the best match. Optional. Default to zero (0).
 	 * @param integer $after Number of results after the best match. Optional. Default to zero (0).
+	 * @param array $binaryCriteria Result of a call to {@link getBinaryCriteria()}. Optional. Default to not defined.
 	 * @return array The list of results and comments. 
 	 *        Results are in the {@link tx_icslibnavitia_NodeList} in <code>JourneyResultList</code> key. Each element is a {@link tx_icslibnavitia_JourneyResult};
 	 *        Comments are in the {@link tx_icslibnavitia_NodeList} in <code>CommentList</code> key. Not yet defined.
 	 */
 	public function getPlanJourney(tx_icslibnavitia_EntryPointDefinition $from, tx_icslibnavitia_EntryPointDefinition $to,
-		$isStartTime = true, DateTime $when = null, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0) {
+		$isStartTime = true, DateTime $when = null, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0, $binaryCriteria = null) {
 		$params = array();
 		$params['Departure'] = (string)$from;
 		$params['Arrival'] = (string)$to;
@@ -199,6 +200,11 @@ class tx_icslibnavitia_APIService {
 		$params['Criteria'] = $kind;
 		$params['NbBefore'] = $before;
 		$params['NbAfter'] = $after;
+		if (is_array($binaryCriteria)) {
+			$params['ModeType'] = $binaryCriteria['ModeType'];
+			$params['Equipment'] = $binaryCriteria['Equipment'];
+			$params['Vehicle'] = $binaryCriteria['Vehicle'];
+		}
 		$xml = $this->CallAPI('PlanJourney', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PlanJourney API; See devlog for additional information');
@@ -390,7 +396,7 @@ class tx_icslibnavitia_APIService {
 	}
 	
 	/**
-	 * Query the PTReferential API function for NetworkList.
+	 * Query the PTReferential API function for LineList.
 	 *
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @param string $lineExternalCode The unique identifier of the line. Optional.
@@ -610,5 +616,96 @@ class tx_icslibnavitia_APIService {
 			$reader->read();
 		}
 		return $result;
+	}
+	
+	/**
+	 * Query the PTReferential API function for ModeTypeList.
+	 *
+	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
+	 */
+	public function getModeTypeList() {
+		return $this->_getModeTypeList($networks);
+	}
+	
+	/**
+	 * Query the PTReferential API function for ModeTypeList.
+	 *
+	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
+	 */
+	private function _getModeTypeList() {
+		$params = array();
+		$params['RequestedType'] = 'ModeTypeList';
+		$xml = $this->CallAPI('PTReferential', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionModeTypeList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_ModeType');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'ModeTypeList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('ModeType' => 'tx_icslibnavitia_ModeType'));
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $list;
+	}
+	
+	/**
+	 * Query the MakeBinaryCriteria API function for criteria value.
+	 * 
+	 * @param array $modeTypeExternalCodes The list of mode type external code to restrict the criteria to. Use the element <code>All</code> alone to select all.
+	 * @param array $flags The boolean flags to add to the criteria. Optional. Default to none.
+	 * @return array The array with creteria values: Vehicle, StopPointEquipment, ModeType.
+	 */
+	public function getBinaryCriteria(array $modeTypeExternalCodes, array $flags = array()) {
+		$params = array();
+		// TODO: Use flags and validate available keys.
+		if (!empty($modeTypeExternalCodes)) {
+			$params['ModeTypeExternalCode'] = implode(';', $modeTypeExternalCodes);
+		}
+		$xml = $this->CallAPI('MakeBinaryCriteria', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'BinaryCriteria')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$values = array();
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+					case 'Mode':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$values[$reader->name] = $reader->readString();
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $values;
 	}
 }
