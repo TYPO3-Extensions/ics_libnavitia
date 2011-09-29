@@ -2,6 +2,7 @@
 	* Added Comment node.
 	* Added comment attribut in Stop node. Note declared in XSDs.
 	* Added CommentList in APIService::getDepartireBoard* methods.
+	* Corrected a bug not skipping an XML Node when it does not contain relevant information. Result was then truncated.
 
 2011-09-21 Pierrick Caillon <pierrick@in-cite.net>
 	* Added API calls for PTReferential.ModeTypeList and MakeBinaryCriteria. Only ModeType support for MakeBinaryCriteria.
