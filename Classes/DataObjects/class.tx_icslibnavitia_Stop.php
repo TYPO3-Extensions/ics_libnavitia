@@ -17,6 +17,7 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 		'stopPoint' => 'object:tx_icslibnavitia_StopPoint?',
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?',
 		'vehicleJourney' => 'object:tx_icslibnavitia_VehicleJourney?',
+		'comment' => 'object:tx_icslibnavitia_Comment?',	// Not in XSD but in real results.
 		'route' => 'object:tx_icslibnavitia_Route?',
 		'vehicleJourneyNameAtStop' => 'string',
 	);
@@ -95,6 +96,11 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_VehicleJourney');
 				$obj->ReadXML($reader);
 				$this->__set('vehicleJourney', $obj);
+				break;
+			case 'Comment':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Comment');
+				$obj->ReadXML($reader);
+				$this->__set('comment', $obj);
 				break;
 			case 'Route':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Route');
