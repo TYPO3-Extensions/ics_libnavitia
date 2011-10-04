@@ -39,13 +39,13 @@ class tx_icslibnavitia_CallValue extends tx_icslibnavitia_Node {
 				$this->dateTime['date']['d'] = (int)$reader->readString();
 				break;
 			case 'Hour':
-				$this->dateTime['hour']['h'] = (int)$reader->readString();
+				$this->dateTime['time']['h'] = (int)$reader->readString();
 				break;
 			case 'Minute':
-				$this->dateTime['hour']['m'] = (int)$reader->readString();
+				$this->dateTime['time']['m'] = (int)$reader->readString();
 				break;
 			case 'Second':
-				$this->dateTime['hour']['s'] = (int)$reader->readString();
+				$this->dateTime['time']['s'] = (int)$reader->readString();
 				break;
 			case 'Criteria':
 				$this->__set('criteria', (int)$reader->readString());

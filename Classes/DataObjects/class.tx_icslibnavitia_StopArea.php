@@ -17,7 +17,7 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
-		$this->values['hangList'] = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Hang');
+		$this->values['hangList'] = t3lib_div::makeInstance('tx_icslibnavitia_HangList');
 		// impactposlist, modetypelist
 	}
 	
@@ -79,7 +79,7 @@ class tx_icslibnavitia_StopArea extends tx_icslibnavitia_Node {
 					tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			case 'HangList':
-				tx_icslibnavitia_Node::ReadList($reader, $this->values['hangList'], array('Hang' => 'tx_icslibnavitia_Hang'));
+				$this->values['hangList']->ReadXML($reader);
 				break;
 			default:
 				tx_icslibnavitia_Node::SkipChildren($reader);

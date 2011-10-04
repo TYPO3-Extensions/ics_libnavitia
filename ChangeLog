@@ -1,3 +1,7 @@
+2011-10-04 Pierrick Caillon <pierrick@in-cite.net>
+	* Corrected time reading in CallValue.
+	* Added specific list type for Hang elements: HangList. Changed usage in EntryPoint and StopArea.
+
 2011-09-29 Pierrick Caillon <pierrick@in-cite.net>
 	* Added Comment node.
 	* Added comment attribut in Stop node. Note declared in XSDs.
