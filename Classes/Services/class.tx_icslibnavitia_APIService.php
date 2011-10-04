@@ -713,4 +713,58 @@ class tx_icslibnavitia_APIService {
 		}
 		return $values;
 	}
+
+	/**
+	 * Query the NextDeparture API function.
+	 *
+	 * @param string $stopAreaExternalCode The unique identifier of the stop area.
+	 * @param string $lineExternalCode The unique identifier of the line.
+	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
+	 * @param integer $startDayAt Number of minutes after midnight to set at the day start time. It is used to offset the time range like for TV shows.
+	 *        For example, if set to 300 (5h00), the search will start at 5 o'clock for the current search day and end before 5 o'clock the next day.
+	 * @param boolean $noNextDay Indicates if the results don't span over the next service day.
+	 * @return tx_icslibnavitia_INodeList The list of next stops by chronological order. Each element is a {@link tx_icslibnavitia_Stop}.
+	 */
+	public function getNextDepartureByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, $forward = true, $count = 5, $startDayAt = 0, $noNextDay = true) {
+		$params = array();
+		$params['StopAreaExternalCode'] = $stopAreaExternalCode;
+		$params['LineExternalCode'] = $lineExternalCode;
+		$params['Sens'] = $forward ? 1 : -1;
+		$startDayAt %= 1440; // 1440 minutes = 24 hours.
+		if ($startDayAt > 0)
+			$params['DateChangeTime'] = sprintf('%d|%d', $startDayAt / 60, $startDayAt % 60);
+		$params['UseTransday'] = $noNextDay ? 'false' : 'true';
+		$xml = $this->CallAPI('NextDeparture', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call NextDeparture API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionNextDepartureList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from NextDeparture API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'NextDepartureList':
+						tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
+						break;
+					case 'PagerInfo':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $stops;
+	}
 }
