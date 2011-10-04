@@ -11,7 +11,7 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 		'mode' => 'object:tx_icslibnavitia_Mode', 
 		'city' => 'object:tx_icslibnavitia_City', 
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?', 
-		'coord' => 'object:tx_icslibnavitia_Coord', 
+		'coord' => 'object:tx_icslibnavitia_Coord?', 
 		// 'comment' => 'object',
 	);
 
@@ -59,11 +59,13 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 				$this->__set('stopArea', $obj);
 				break;
 			case 'Coord':
-				if (strlen($reader->readString()) > 0) {
+				if (!$reader->isEmptyElement && (strlen($reader->readString()) > 0)) {
 					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
 					$obj->ReadXML($reader);
 					$this->__set('coord', $obj);
 				}
+				else
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			default:
 				tx_icslibnavitia_Node::SkipChildren($reader);

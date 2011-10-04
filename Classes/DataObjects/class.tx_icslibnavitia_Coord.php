@@ -22,14 +22,14 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 				case 'x':
 				case 'y':
 					list($lat, $lng) = tx_icslibnavitia_CoordinateConverter::convertToWGS84($this->__get('x'), $this->__get('y'));
-					parent::__set('lat', $lat);
-					parent::__set('lng', $lng);
+					parent::__set('lat', (double)$lat);
+					parent::__set('lng', (double)$lng);
 					break;
 				case 'lat':
 				case 'lng':
 					list($x, $y) = tx_icslibnavitia_CoordinateConverter::convertFromWGS84($this->__get('lat'), $this->__get('lng'));
-					parent::__set('x', $x);
-					parent::__set('y', $y);
+					parent::__set('x', (double)$x);
+					parent::__set('y', (double)$y);
 					break;
 			}
 		}
@@ -40,11 +40,6 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 	}
 	
 	protected function ReadAttribute(XMLReader $reader) {
-		switch ($reader->name) {
-			case '':
-				$this->__set('', $reader->value);
-				break;
-		}
 	}
 
 	protected function ReadElement(XMLReader $reader) {
