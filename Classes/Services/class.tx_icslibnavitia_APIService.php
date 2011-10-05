@@ -767,4 +767,58 @@ class tx_icslibnavitia_APIService {
 		}
 		return $stops;
 	}
+	
+	/**
+	 * Query the PTReferential API function for StopAreaList.
+	 *
+	 * @param string stopAreaExternalCode The external code to look for.
+	 * @return tx_icslibnavitia_StopArea The requested stop area.
+	 */
+	public function getStopAreaByCode($stopAreaExternalCode) {
+		$list = $this->_getStopAreaList(array($stopAreaExternalCode));
+		if ($list->Count() > 0) return $list->Get(0);
+		return null;
+	}
+	
+	/**
+	 * Query the PTReferential API function for ModeTypeList.
+	 *
+	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
+	 */
+	private function _getStopAreaList(array $stopAreaExternalCodes) {
+		$params = array();
+		$params['RequestedType'] = 'StopAreaList';
+		if (empty($stopAreaExternalCodes))
+			return t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
+		$params['StopAreaExternalCode'] = implode(';', $stopAreaExternalCodes);
+		$xml = $this->CallAPI('PTReferential', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'StopAreaList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $list;
+	}
 }
