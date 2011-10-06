@@ -2,7 +2,7 @@
 
 class tx_icslibnavitia_HangList extends tx_icslibnavitia_Node implements tx_icslibnavitia_INodeList {
 	static $fields = array(
-		'odd' => 'boolean',
+		'odd' => 'bool',
 		'start' => 'integer',
 		'end' => 'integer',
 	);

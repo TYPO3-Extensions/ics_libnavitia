@@ -1,3 +1,9 @@
+2011-10-06 Pierrick Caillon <pierrick@in-cite.net>
+	* Fixed type definition for odd property in HangList node.
+	* Added Proximity node.
+	* API request PTReferential for LineList filtered by StopArea.
+	* API request ProximityList.
+
 2011-10-05 Pierrick Caillon <pierrick@in-cite.net>
 	* API request PTReferential for StopAreaList (by code only).
 

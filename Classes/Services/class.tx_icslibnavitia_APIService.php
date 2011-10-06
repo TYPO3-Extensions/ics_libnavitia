@@ -396,13 +396,26 @@ class tx_icslibnavitia_APIService {
 	}
 	
 	/**
+	 * Query the PTReferential API function for LineList filtered by stop area.
+	 *
+	 * @param string $stopAreaExternalCode The unique identifier of the filtering stop area.
+	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
+	 * @return tx_icslibnavitia_INodeList The list of matching lines. Each element is a {@link tx_icslibnavitia_Line}.
+	 */
+	public function getLineByStopAreaCode($stopAreaExternalCode, tx_icslibnavitia_INodeList $networks = null) {
+		return $this->_getLineList($networks, null, array('StopArea' => array($stopAreaExternalCode)));
+	}
+	
+	/**
 	 * Query the PTReferential API function for LineList.
 	 *
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @param string $lineExternalCode The unique identifier of the line. Optional.
+	 * @param array $filters Other elements external codes. Available filters are: ModeType, Mode, Company, VehicleJourney, Connection, StopPoint, StopArea, RoutePoint, Route, District, Department, City, ODT, Destination.
+	 *        Each filter is an array of externalCodes.
 	 * @return tx_icslibnavitia_INodeList The list of available lines. Each element is a {@link tx_icslibnavitia_Line}.
 	 */
-	private function _getLineList(tx_icslibnavitia_INodeList $networks = null, $lineExternalCode = null) {
+	private function _getLineList(tx_icslibnavitia_INodeList $networks = null, $lineExternalCode = null, array $filters = array()) {
 		$params = array();
 		$params['RequestedType'] = 'LineList';
 		if ($networks != null) {
@@ -420,6 +433,11 @@ class tx_icslibnavitia_APIService {
 		}
 		if ($lineExternalCode !== null) {
 			$params['LineExternalCode'] = $lineExternalCode;
+		}
+		else if (!empty($filters)) {
+			foreach ($filters as $type => $values) {
+				$params[$type . 'ExternalCode'] = implode(';', $values);
+			}
 		}
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
@@ -733,7 +751,7 @@ class tx_icslibnavitia_APIService {
 		$startDayAt %= 1440; // 1440 minutes = 24 hours.
 		if ($startDayAt > 0)
 			$params['DateChangeTime'] = sprintf('%d|%d', $startDayAt / 60, $startDayAt % 60);
-		$params['UseTransday'] = $noNextDay ? 'false' : 'true';
+		$params['UseTransday'] = $noNextDay ? 0 : 1;
 		$xml = $this->CallAPI('NextDeparture', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call NextDeparture API; See devlog for additional information');
@@ -781,9 +799,9 @@ class tx_icslibnavitia_APIService {
 	}
 	
 	/**
-	 * Query the PTReferential API function for ModeTypeList.
+	 * Query the PTReferential API function for StopAreaList.
 	 *
-	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
+	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_StopArea}.
 	 */
 	private function _getStopAreaList(array $stopAreaExternalCodes) {
 		$params = array();
@@ -812,6 +830,74 @@ class tx_icslibnavitia_APIService {
 						break;
 					case 'StopAreaList':
 						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $list;
+	}
+	
+	/**
+	 * Query the ProximityList API function for nearest StopArea.
+	 *
+	 * @param tx_icslibnavitia_Coord $coordinates The coordinates of the start point.
+	 * @param integer $distance Maximum search distance, in meters. Optional. Default to 1000. Circle radius or half square side lenght.
+	 * @param integer $min Minimum number of results. Optional. Default to 0.
+	 * @param integer $max Maximum number of results. Optional. Default to 100.
+	 * @param boolean $circle Force to maximum distance to be checked using a circle instead of a square.
+	 * @return tx_icslibnavitia_INodeList The list of nearest stop area. Each element is a {@link tx_icslibnavitia_Proximity}.
+	 *         stopArea and distance in each elements are defined.
+	 */
+	public function getStopAreaProximityList(tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = true) {
+		return $this->_getProximityList('StopArea', $coordinates, $distance, $min, $max, $circle);
+	}
+	
+	/**
+	 * Query the ProximityList API function.
+	 *
+	 * @param string $type The type of searched elements. Can be Site, StopPoint, StopArea or MainStopArea. Invalid value replaced by StopPoint.
+	 * @param tx_icslibnavitia_Coord $coordinates The coordinates of the start point.
+	 * @param integer $distance Maximum search distance, in meters. Optional. Default to 1000. Circle radius or half square side lenght.
+	 * @param integer $min Minimum number of results. Optional. Default to 0.
+	 * @param integer $max Maximum number of results. Optional. Default to 100.
+	 * @param boolean $circle Force to maximum distance to be checked using a circle instead of a square.
+	 * @return tx_icslibnavitia_INodeList The list of nearest stop area, site, or stop point. Each element is a {@link tx_icslibnavitia_Proximity}.
+	 */
+	private function _getProximityList($type, tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = true) {
+		$params = array();
+		if (!in_array($type, array('Site', 'StopPoint', 'StopArea', 'MainStopArea')))
+			$type = 'StopPoint';
+		$params['Type'] = $type;
+		$params['X'] = $coordinates->x;
+		$params['Y'] = $coordinates->y;
+		$params['Distance'] = $distance;
+		$params['MinCount'] = $min;
+		$params['NbMax'] = $max;
+		$params['CircleFilter'] = $circle ? 1 : 0;
+		$xml = $this->CallAPI('ProximityList', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call ProximityList API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionProximityList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from ProximityList API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Proximity');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'ProximityList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('Proximity' => 'tx_icslibnavitia_Proximity'));
 						break;
 					default:
 						$this->SkipChildren($reader);
