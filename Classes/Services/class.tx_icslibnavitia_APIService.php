@@ -402,7 +402,7 @@ class tx_icslibnavitia_APIService {
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of matching lines. Each element is a {@link tx_icslibnavitia_Line}.
 	 */
-	public function getLineByStopAreaCode($stopAreaExternalCode, tx_icslibnavitia_INodeList $networks = null) {
+	public function getLineListByStopAreaCode($stopAreaExternalCode, tx_icslibnavitia_INodeList $networks = null) {
 		return $this->_getLineList($networks, null, array('StopArea' => array($stopAreaExternalCode)));
 	}
 	

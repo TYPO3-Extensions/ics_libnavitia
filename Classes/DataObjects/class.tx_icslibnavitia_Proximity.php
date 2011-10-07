@@ -22,7 +22,7 @@ class tx_icslibnavitia_Proximity extends tx_icslibnavitia_Node {
 	
 	protected function ReadAttribute(XMLReader $reader) {
 		switch ($reader->name) {
-			case 'distance':
+			case 'Distance':
 				$this->__set('distance', (int)$reader->value);
 				break;
 		}
