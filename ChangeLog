@@ -2,6 +2,7 @@
 	* Updated autoload.php
 	* Fixed attribute name in Proximity node.
 	* Changed method name from getLineByStopAreaCode to getLineListByStopAreaCode in APIService to match existing methods naming and return type.
+	* Bug fix in CoordinateConverter call in Coord node.
 
 2011-10-06 Pierrick Caillon <pierrick@in-cite.net>
 	* Fixed type definition for odd property in HangList node.

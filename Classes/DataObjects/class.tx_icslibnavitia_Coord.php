@@ -21,15 +21,15 @@ class tx_icslibnavitia_Coord extends tx_icslibnavitia_Node {
 			switch ($name) {
 				case 'x':
 				case 'y':
-					list($lat, $lng) = tx_icslibnavitia_CoordinateConverter::convertToWGS84($this->__get('x'), $this->__get('y'));
-					parent::__set('lat', (double)$lat);
-					parent::__set('lng', (double)$lng);
+					$values = tx_icslibnavitia_CoordinateConverter::convertToWGS84($this->__get('x'), $this->__get('y'));
+					parent::__set('lat', $values['lat']);
+					parent::__set('lng', $values['lng']);
 					break;
 				case 'lat':
 				case 'lng':
-					list($x, $y) = tx_icslibnavitia_CoordinateConverter::convertFromWGS84($this->__get('lat'), $this->__get('lng'));
-					parent::__set('x', (double)$x);
-					parent::__set('y', (double)$y);
+					$values = tx_icslibnavitia_CoordinateConverter::convertFromWGS84($this->__get('lat'), $this->__get('lng'));
+					parent::__set('x', $values['X']);
+					parent::__set('y', $values['Y']);
 					break;
 			}
 		}
