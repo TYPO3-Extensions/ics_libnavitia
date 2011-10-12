@@ -1,3 +1,6 @@
+2011-10-12 Pierrick Caillon <pierrick@in-cite.net>
+	* Bug fix: count parameter was not used in the API call of APIService::getNextDeparture
+
 2011-10-07 Pierrick Caillon <pierrick@in-cite.net>
 	* Updated autoload.php
 	* Fixed attribute name in Proximity node.

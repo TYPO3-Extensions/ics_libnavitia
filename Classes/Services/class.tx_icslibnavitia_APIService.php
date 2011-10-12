@@ -738,6 +738,7 @@ class tx_icslibnavitia_APIService {
 	 * @param string $stopAreaExternalCode The unique identifier of the stop area.
 	 * @param string $lineExternalCode The unique identifier of the line.
 	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
+	 * @param integer $count The maximum number of stop times to obtain. Optional. Default to five (5).
 	 * @param integer $startDayAt Number of minutes after midnight to set at the day start time. It is used to offset the time range like for TV shows.
 	 *        For example, if set to 300 (5h00), the search will start at 5 o'clock for the current search day and end before 5 o'clock the next day.
 	 * @param boolean $noNextDay Indicates if the results don't span over the next service day.
@@ -748,6 +749,7 @@ class tx_icslibnavitia_APIService {
 		$params['StopAreaExternalCode'] = $stopAreaExternalCode;
 		$params['LineExternalCode'] = $lineExternalCode;
 		$params['Sens'] = $forward ? 1 : -1;
+		$params['NbStop'] = $count;
 		$startDayAt %= 1440; // 1440 minutes = 24 hours.
 		if ($startDayAt > 0)
 			$params['DateChangeTime'] = sprintf('%d|%d', $startDayAt / 60, $startDayAt % 60);
