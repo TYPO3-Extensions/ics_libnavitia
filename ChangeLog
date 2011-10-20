@@ -1,3 +1,6 @@
+2011-10-20 Pierrick Caillon <pierrick@in-cite.net>
+	* Bug fix: float values in Time node after setting totalSeconds.
+
 2011-10-12 Pierrick Caillon <pierrick@in-cite.net>
 	* Bug fix: count parameter was not used in the API call of APIService::getNextDeparture
 

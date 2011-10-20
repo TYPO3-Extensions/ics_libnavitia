@@ -57,11 +57,11 @@ class tx_icslibnavitia_Time extends tx_icslibnavitia_Node {
 				return;
 			}
 			$value /= 60;
-			$this->values['minute'] = $value % 60;
+			$this->values['minute'] = (int)($value % 60);
 			$value /= 60;
-			$this->values['hour'] = $value % 24;
+			$this->values['hour'] = (int)($value % 24);
 			$value /= 24;
-			$this->values['day'] = $value;
+			$this->values['day'] = (int)$value;
 			return;
 		}
 		parent::__set($name, $value);
