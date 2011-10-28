@@ -1,3 +1,8 @@
+2011-10-28 Pierrick Caillon <pierrick@in-cite.net>
+	* Removed DummyService.
+	* Added ConstantEditorControls.
+	* Started Network Selector control.
+
 2011-10-20 Pierrick Caillon <pierrick@in-cite.net>
 	* Bug fix: float values in Time node after setting totalSeconds.
 
