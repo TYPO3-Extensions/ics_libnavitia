@@ -66,6 +66,8 @@ class tx_icslibnavitia_EntryPointPlanJourney extends tx_icslibnavitia_Node {
 					$obj->ReadXML($reader);
 					$this->__set('coord', $obj);
 				}
+				else
+					tx_icslibnavitia_Node::SkipChildren($reader);
 				break;
 			case 'StopPoint':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_StopPoint');
