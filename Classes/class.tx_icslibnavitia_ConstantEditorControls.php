@@ -32,6 +32,8 @@ class tx_icslibnavitia_ConstantEditorControls {
 			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_navitiaurl'));
 		$dataProvider = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $url, $login);
 		$networks = $dataProvider->getNetworkList();
+		if ($networks == null)
+			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_unavailable'));
 		$values = array(
 			'' => '',
 		);

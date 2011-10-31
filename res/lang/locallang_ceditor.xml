@@ -10,6 +10,7 @@
 		<languageKey index="default" type="array">
 			<label index="error_constantname">Constant name could not be extracted.</label>
 			<label index="error_navitiaurl">No NAViTiA URL value defined.</label>
+			<label index="error_unavailable">API is not available. The NAViTiA URL may not be correct.</label>
 		</languageKey>
 	</data>
 </T3locallang>
