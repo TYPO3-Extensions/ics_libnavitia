@@ -1,5 +1,6 @@
 2011-10-31 Pierrick Caillon <pierrick@in-cite.net>
 	* Finalized Network Selector control.
+	* Added ModeType Selector control.
 
 2011-10-28 Pierrick Caillon <pierrick@in-cite.net>
 	* Removed DummyService.

@@ -6,8 +6,51 @@ class tx_icslibnavitia_ConstantEditorControls {
 	 * Additional parameters in constant definition:
 	 * - url: The path to the constant containing the NAViTiA URL.
 	 * - login: The path to the constant containing the NAViTiA stat identifier.
+	 * - size: Size of the selector box. 1=dropdown; -1=adjust, multiselect; >1=max size, multiselect.
 	 */
 	public function selectNetworkControl($constantInfo, $ceditor) {
+		$result = $this->selectCommonControl($constantInfo, $ceditor);
+		if (!is_array($result))
+			return $result;
+		list($constantName, $fieldName, $aname, $selected, $url, $login, $size) = $result;
+		$dataProvider = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $url, $login);
+		$networks = $dataProvider->getNetworkList();
+		if ($networks == null)
+			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_unavailable'));
+		$values = array(
+			'' => '',
+		);
+		for ($i = 0; $i < $networks->Count(); $i++) {
+			$values[$networks->Get($i)->externalCode] = $networks->Get($i)->name;
+		}
+		return $this->displayOptions($fieldName, $aname, $values, $selected, $size);
+	}
+	/**
+	 * Create a select control with the ModeType list queried for NAViTiA.
+	 * Additional parameters in constant definition:
+	 * - url: The path to the constant containing the NAViTiA URL.
+	 * - login: The path to the constant containing the NAViTiA stat identifier.
+	 * - size: Size of the selector box. 1=dropdown; -1=adjust, multiselect; >1=max size, multiselect.
+	 */
+	public function selectModeTypeControl($constantInfo, $ceditor) {
+		$result = $this->selectCommonControl($constantInfo, $ceditor);
+		if (!is_array($result))
+			return $result;
+		list($constantName, $fieldName, $aname, $selected, $url, $login, $size) = $result;
+		$dataProvider = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $url, $login);
+		$modeTypes = $dataProvider->getModeTypeList();
+		if ($modeTypes == null)
+			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_unavailable'));
+		$values = array(
+			'' => '',
+		);
+		for ($i = 0; $i < $modeTypes->Count(); $i++) {
+			$values[$modeTypes->Get($i)->externalCode] = $modeTypes->Get($i)->name;
+		}
+		return $this->displayOptions($fieldName, $aname, $values, $selected, $size);
+	}
+	
+	protected function selectCommonControl($constantInfo, $ceditor) {
 		if (!preg_match('/^data\\[(.+)\\]$/', $constantInfo['fieldName'], $match))
 			return $this->errorControl($constantInfo, $this->getLL('error_constantname'));
 		$constantName = $match[1];
@@ -30,17 +73,7 @@ class tx_icslibnavitia_ConstantEditorControls {
 			$size = 1;
 		if (empty($url))
 			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_navitiaurl'));
-		$dataProvider = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $url, $login);
-		$networks = $dataProvider->getNetworkList();
-		if ($networks == null)
-			return $this->fallbackControl($fieldName, $selected, $aname) . $this->errorControl($constantInfo, $this->getLL('error_unavailable'));
-		$values = array(
-			'' => '',
-		);
-		for ($i = 0; $i < $networks->Count(); $i++) {
-			$values[$networks->Get($i)->externalCode] = $networks->Get($i)->name;
-		}
-		return $this->displayOptions($fieldName, $aname, $values, $selected, $size);
+		return array($constantName, $fieldName, $aname, $selected, $url, $login, $size);
 	}
 	
 	protected function readCustomParameters($constantComment) {
