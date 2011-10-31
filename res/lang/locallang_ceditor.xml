@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>module</type>
+		<description>Language labels for Constant Editor Controls</description>
+		<labelContext type="array">
+		</labelContext>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="error_constantname">Constant name could not be extracted.</label>
+			<label index="error_navitiaurl">No NAViTiA URL value defined.</label>
+		</languageKey>
+	</data>
+</T3locallang>
