@@ -13,21 +13,21 @@ class tx_icslibnavitia_AddressType extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		$this->_ReadXML($reader, 'Address');
+		$this->_ReadXML($reader, 'AddressType');
 	}
 	
 	protected function ReadAttribute(XMLReader $reader) {
 		switch ($reader->name) {
-			case 'AddressId':
+			case 'AddressTypeId':
 				$this->__set('id', (int)$reader->value);
 				break;
-			case 'AddressName':
+			case 'AddressTypeName':
 				$this->__set('name', $reader->value);
 				break;
-			case 'AddressIdx':
+			case 'AddressTypeIdx':
 				$this->__set('idx', (int)$reader->value);
 				break;
-			case 'AddressExternalCode':
+			case 'AddressTypeExternalCode':
 				$this->__set('externalCode', $reader->value);
 				break;
 		}
