@@ -1,7 +1,9 @@
-2011-10-31 Pierrick Caillon <pierrick@in-cite.net>
+2012-01-09 Pierrick Caillon <pierrick@in-cite.net>
 	* Added AddressType Node.
-	* Added getModeTypesByCode method in APIService
 	* Added type property in Address node.
+
+2012-01-06 Pierrick Caillon <pierrick@in-cite.net>
+	* Added getModeTypesByCode method in APIService
 
 2011-10-31 Pierrick Caillon <pierrick@in-cite.net>
 	* Finalized Network Selector control.
