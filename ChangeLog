@@ -1,4 +1,9 @@
 2011-10-31 Pierrick Caillon <pierrick@in-cite.net>
+	* Added AddressType Node.
+	* Added getModeTypesByCode method in APIService
+	* Added type property in Address node.
+
+2011-10-31 Pierrick Caillon <pierrick@in-cite.net>
 	* Finalized Network Selector control.
 	* Added ModeType Selector control.
 	* Bug fix: Forgotten node in the 2011-09-29 bug fix. EPPlanJourney.

@@ -647,17 +647,31 @@ class tx_icslibnavitia_APIService {
 	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
 	 */
 	public function getModeTypeList() {
-		return $this->_getModeTypeList($networks);
+		return $this->_getModeTypeList();
+	}
+	
+	/**
+	 * Query the PTReferential API function for a set of ModeTypes.
+	 *
+	 * @param array $modeTypeExternalCodes The list of modeType's unique identifier.
+	 * @return tx_icslibnavitia_INodeList The list of requested modeTypes. Each element is a {@link tx_icslibnavitia_ModeType}.
+	 */
+	public function getModeTypesByCodes(array $modeTypeExternalCodes) {
+		if (empty($modeTypeExternalCodes)) return t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_ModeType');
+		return $this->_getModeTypeList(implode(';', $modeTypeExternalCodes));
 	}
 	
 	/**
 	 * Query the PTReferential API function for ModeTypeList.
 	 *
+	 * @param string $modeTypeExternalCode The identifier of the modeType. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
 	 */
-	private function _getModeTypeList() {
+	private function _getModeTypeList($modeTypeExternalCode = null) {
 		$params = array();
 		$params['RequestedType'] = 'ModeTypeList';
+		if ($modeTypeExternalCode !== null)
+			$params['ModeTypeExternalCode'] = $modeTypeExternalCode;
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');

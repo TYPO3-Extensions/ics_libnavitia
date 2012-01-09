@@ -1,14 +1,11 @@
 <?php
 
-class tx_icslibnavitia_Address extends tx_icslibnavitia_Node {
+class tx_icslibnavitia_AddressType extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'idx' => 'int',
 		'id' => 'int',
 		'name' => 'string',
 		'externalCode' => 'string',
-		'type' => 'object:tx_icslibnavitia_AddressType?',
-		'coord' => 'object:tx_icslibnavitia_Coord?',
-		'city' => 'object:tx_icslibnavitia_City',
 	);
 
 	public function __construct() {
@@ -38,25 +35,6 @@ class tx_icslibnavitia_Address extends tx_icslibnavitia_Node {
 
 	protected function ReadElement(XMLReader $reader) {
 		switch ($reader->name) {
-			case 'City':
-				$obj = t3lib_div::makeInstance('tx_icslibnavitia_City');
-				$obj->ReadXML($reader);
-				$this->__set('city', $obj);
-				break;
-			case 'AddressType':
-				$obj = t3lib_div::makeInstance('tx_icslibnavitia_AddressType');
-				$obj->ReadXML($reader);
-				$this->__set('type', $obj);
-				break;
-			case 'Coord':
-				if (strlen($reader->readString()) > 0) {
-					$obj = t3lib_div::makeInstance('tx_icslibnavitia_Coord');
-					$obj->ReadXML($reader);
-					$this->__set('coord', $obj);
-				}
-				else
-					tx_icslibnavitia_Node::SkipChildren($reader);
-				break;
 			default:
 				tx_icslibnavitia_Node::SkipChildren($reader);
 		}
