@@ -1,77 +1,58 @@
 <?php
 
-// http://professionnels.ign.fr/DISPLAY/000/526/701/5267019/NTG_71.pdf paramètres.
-// http://geodesie.ign.fr/contenu/fichiers/documentation/pedagogiques/transfo.pdf p12 paramètres.
-// http://www.forumsig.org/showthread.php?p=64050#post64050
+// Convert coordinates with cs2cs (GDAL/OGR
 class tx_icslibnavitia_CoordinateConverter {
 
-	private static $n = 0.72896862742141; // Exposant de la projection. n=sin(phi0)
-	private static $c = 11745793.39; // Constante de la projection. c=s*N(phi0,a,e)*cotan(phi0)*exp(n*LatIso(phi0,e)) avec N(phi,a,e)=a/sqrt(1-e²*sin(phi)²) et LatIso(phi,e)=ln(tan(PI/4+phi/2)*((1-e*sin(phi))/(1+e*sin(phi)))^(e/2)) // N: grande normale
-	private static $Xs = 600000.0; // Coordonnées en projection du pôle. Xs=X0
-	private static $Ys = 8199695.768; // Coordonnées en projection du pôle. Ys=Y0+s*N(phi0, a, e)*cotan(phi0)
-	private static $lambda0; // = deg2rad((14.025 / 60 + 20) / 60 + 2); // Longitude du méridien de paris par rapport au méridien d'origine. (rad)
-	private static $e = 0.0824832567634177; // Première excentricité de l'ellipsoïde. ((SQRT(.006803487646))) e=sqrt((a²-b²)/a²)
-	
-	private static $a = 6378249.2; // Demi grand axe. (m)
-	private static $b = 6356515; // Demi petit axe. (m) b=a*(1-f)
-	private static $f; // = 1 / 293.466021; // Applatissement.
-	private static $phi0; // = deg2rad(48 / 60 + 46); // Latitude origine. (rad)
-	private static $phi1; // = deg2rad((56.108 / 60 + 53) / 60 + 45); // Latitude du premier parallèle automécoïque. (rad)
-	private static $phi2; // = deg2rad((45.652 / 60 + 41) / 60 + 47); // Latitude du second parallèle automécoïque. (rad)
-	private static $X0 = 600000; // Translation X. (m) (E0)
-	private static $Y0 = 2200000; // Translation Y. (m) (N0)
-	private static $s = 0.99987742; // Facteur d'échelle. (k0)
-	
-	public static function init() {
-		self::$lambda0 = deg2rad((14.025 / 60 + 20) / 60 + 2);
-		self::$f = 1 / 293.466021293627;
-		self::$phi0 = deg2rad(48 / 60 + 46);
-		self::$phi1 = deg2rad((56.108 / 60 + 53) / 60 + 45);
-		self::$phi2 = deg2rad((45.652 / 60 + 41) / 60 + 47);
-	}
+	private static $wgs84Definition = '+proj=lonlat +a=6378137.0000 +rf=298.2572221010000 +units=m +no_defs';
+	private static $lambIIEDefinition = '+proj=lcc +towgs84=-168.0000,-60.0000,320.0000 +a=6378249.2000 +rf=293.466021 +pm=2.337229167 +lat_0=46.800000000 +lon_0=0.000000000 +k_0=0.99987742 +lat_1=45,8989188 +lat_2=47,6960144 +x_0=600000.000 +y_0=2200000.000 +units=m +no_defs';
+	private static $helperProcName = 'cs2cs';
 	
 	public static function convertfromWGS84($lat, $lng) {
-		$phi = deg2rad($lat);
-		$lambda = deg2rad($lng);
-		
-		// list($X, $Y, $Z) = convertToWGS84Cartesian($phi, $lambda);
-		// list($X, $Y, $Z) = translateForNTF($X, $Y, $Z);
-		// list($phi, $lambda) = convertFromNTFCartesian($X, $Y, $Z);
-		// list($X, $Y) = convertToLambertIIExtended($phi, $lambda);
-		
-		$L = log(tan((M_PI / 4) + ($phi / 2))) * pow((1 - self::$e * sin($phi)) / (1 + self::$e * sin($phi)), self::$e / 2);
-		// $L = .5 * log((1 + sin($lat)) / (1 - sin($lat))) - self::$e * .5 * log((1 + self::$e * sin($lat)) / (1 - self::$e * sin($lat)));
-		$R = self::$c * exp(- self::$n * $L);
-		$gamma = self::$n * ($lambda - self::$lambda0); // θ = n(?-?0)
-		$X = self::$Xs + $R * sin($gamma);
-		$Y = self::$Ys - $R * cos($gamma);
-		return array('X' => $X, 'Y' => $Y);
+		$result = self::Call(self::$wgs84Definition, self::$lambIIEDefinition, '%.15f', '%.2f', array($lng, $lat));
+		if (!$result)
+			return null;
+		return array('X' => $result[0], 'Y' => $result[1]);
 	}
 	
 	public static function convertToWGS84($X, $Y) {
-		// list($phi, $lambda) = convertFromLambertIIExtended($X, $Y);
-		// list($X, $Y, $Z) = convertToNTFCartesian($phi, $lambda);
-		// list($X, $Y, $Z) = translateForWGS84($X, $Y, $Z);
-		// list($phi, $lambda) = convertFromWGS84Cartesian($X, $Y, $Z);
-	
-		$dX = $X - self::$Xs;
-		$dY = $Y - self::$Ys;
-		$R = sqrt($dX * $dX + $dY * $dY);
-		$gamma = atan(($X - self::$Xs) / (self::$Ys - $Y));
-		$lambda = self::$lambda0 + $gamma / self::$n;
-		$L = (-1 / self::$n) * log(abs($R / self::$c));
-		$phi = self::Linv($L);
-		return array('lat' => rad2deg($phi), 'lng' => rad2deg($lambda));
+		$result = self::Call(self::$lambIIEDefinition, self::$wgs84Definition, '%.2f', '%.15f', array($X, $Y));
+		if (!$result)
+			return null;
+		return array('lat' => $result[1], 'lng' => $result[0]);
 	}
 	
-	private static function Linv($L) {
-		$phi0 = 0;
-		$phiI = 2 * atan(exp($L)) - M_PI / 2;
-		while (abs($phiI - $phi0) > 1e-5) {
-			$phi0 = $phiI;
-			$phiI = 2 * atan(pow((1 + self::$e * sin($phi0)) / (1 - self::$e * sin($phi0)), self::$e / 2) * exp($L)) - M_PI / 2;
+	private static function Call($from, $to, $fromFormat, $toFormat, array $values) {
+		$descspec = array(
+			0 => array('pipe', 'r'),
+			1 => array('pipe', 'w'),
+		);
+		
+		$command = self::$helperProcName . ' ' . $from . ' +to ' . $to . ' -f ' . escapeshellarg($toFormat);
+		$input = array();
+		foreach ($values as $value)
+			$input[] = sprintf($fromFormat, $value);
+		$input = implode(' ', $input);
+		
+		$pipes = array();
+		$process = proc_open($command, $descspec, $pipes);
+
+		$result = false;
+		if (is_resource($process)) {
+			fwrite($pipes[0], $input);
+			fclose($pipes[0]);
+			
+			$read = array($pipes[1]);
+			$write = $except = NULL;
+			if (stream_select($read, $write, $except, 0, 3000) !== false) {
+				$output = fread($pipes[1], 1024);
+				$output = preg_split('/[ 	]+/', $output);
+				if (is_numeric($output[0]) && is_numeric($output[1])) {
+					$result = array(floatval($output[0]), floatval($output[1]));
+				}
+			}
+			fclose($pipes[1]);
+			proc_close($process);
 		}
-		return $phiI;
+		return $result;
 	}
 }
-tx_icslibnavitia_CoordinateConverter::init();
