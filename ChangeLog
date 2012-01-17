@@ -1,4 +1,7 @@
 2012-01-16 Pierrick Caillon <pierrick@in-cite.net>
+	* Corrected some parameters of GDAL call
+
+2012-01-16 Pierrick Caillon <pierrick@in-cite.net>
 	* Coordinate convertion using GDAL (cs2cs)
 
 2012-01-09 Pierrick Caillon <pierrick@in-cite.net>

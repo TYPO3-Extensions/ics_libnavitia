@@ -3,11 +3,11 @@
 // Convert coordinates with cs2cs (GDAL/OGR
 class tx_icslibnavitia_CoordinateConverter {
 
-	private static $wgs84Definition = '+proj=lonlat +a=6378137.0000 +rf=298.2572221010000 +units=m +no_defs';
-	private static $lambIIEDefinition = '+proj=lcc +towgs84=-168.0000,-60.0000,320.0000 +a=6378249.2000 +rf=293.466021 +pm=2.337229167 +lat_0=46.800000000 +lon_0=0.000000000 +k_0=0.99987742 +lat_1=45,8989188 +lat_2=47,6960144 +x_0=600000.000 +y_0=2200000.000 +units=m +no_defs';
+	private static $wgs84Definition = '+proj=lonlat +a=6378137.0 +rf=298.257223563 +units=m +no_defs';
+	private static $lambIIEDefinition = '+proj=lcc +towgs84=-168.0,-60.0,320.0 +a=6378249.2 +rf=293.466021 +pm=2.337229167 +lat_0=46.8 +lon_0=0.0 +k_0=0.99987742 +lat_1=45.8989188 +lat_2=47.6960144 +x_0=600000.0 +y_0=2200000.0 +units=m +no_defs';
 	private static $helperProcName = 'cs2cs';
 	
-	public static function convertfromWGS84($lat, $lng) {
+	public static function convertFromWGS84($lat, $lng) {
 		$result = self::Call(self::$wgs84Definition, self::$lambIIEDefinition, '%.15f', '%.2f', array($lng, $lat));
 		if (!$result)
 			return null;
