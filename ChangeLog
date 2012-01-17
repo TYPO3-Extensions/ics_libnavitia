@@ -1,8 +1,5 @@
-2012-01-16 Pierrick Caillon <pierrick@in-cite.net>
-	* Corrected some parameters of GDAL call
-
-2012-01-16 Pierrick Caillon <pierrick@in-cite.net>
-	* Coordinate convertion using GDAL (cs2cs)
+2012-01-17 Pierrick Caillon <pierrick@in-cite.net>
+	* Corrected coordinates conversion using http://www.destineo.fr/extension/NavitiaPack/design/standard/javascript/conversion.js
 
 2012-01-09 Pierrick Caillon <pierrick@in-cite.net>
 	* Added AddressType Node.
@@ -46,6 +43,9 @@
 	* Corrected time reading in CallValue.
 	* Added specific list type for Hang elements: HangList. Changed usage in EntryPoint and StopArea.
 	* API request NextDeparture.
+
+2011-09-30 Pierrick Caillon <pierrick@in-cite.net>
+	* Reworked coordinates conversion. Still bugs.
 
 2011-09-29 Pierrick Caillon <pierrick@in-cite.net>
 	* Added Comment node.
