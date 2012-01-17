@@ -1,3 +1,6 @@
+2012-01-17 Pierrick Caillon <pierrick@in-cite.net>
+	* Corrected coordinates conversion using http://www.destineo.fr/extension/NavitiaPack/design/standard/javascript/conversion.js
+
 2011-09-30 Pierrick Caillon <pierrick@in-cite.net>
 	* Reworked coordinates conversion. Still bugs.
 

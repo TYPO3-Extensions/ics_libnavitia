@@ -12,30 +12,13 @@ class tx_icslibnavitia_CoordinateConverter {
 	
 	// Paramètres de la projection Lambert II étendue dans le système géodésique NTF.
 	public static $lambertIIE;
-
-	// private static $n = 0.72896862742141; // Exposant de la projection. n=sin(phi0)
-	// private static $c = 11745793.39; // Constante de la projection. c=s*N(phi0,a,e)*cotan(phi0)*exp(n*LatIso(phi0,e)) avec N(phi,a,e)=a/sqrt(1-e²*sin(phi)²) et LatIso(phi,e)=ln(tan(PI/4+phi/2)*((1-e*sin(phi))/(1+e*sin(phi)))^(e/2)) // N: grande normale
-	// private static $Xs = 600000.0; // Coordonnées en projection du pôle. Xs=X0
-	// private static $Ys = 8199695.768; // Coordonnées en projection du pôle. Ys=Y0+s*N(phi0, a, e)*cotan(phi0)
-	// private static $lambda0; // = deg2rad((14.025 / 60 + 20) / 60 + 2); // Longitude du méridien de paris par rapport au méridien d'origine. (rad)
-	// private static $e = 0.0824832567634177; // Première excentricité de l'ellipsoïde. ((SQRT(.006803487646))) e=sqrt((a²-b²)/a²)
-	
-	// private static $a = 6378249.2; // Demi grand axe. (m)
-	// private static $b = 6356515; // Demi petit axe. (m) b=a*(1-f)
-	// private static $f; // = 1 / 293.466021; // Applatissement.
-	// private static $phi0; // = deg2rad(48 / 60 + 46); // Latitude origine. (rad)
-	// private static $phi1; // = deg2rad((56.108 / 60 + 53) / 60 + 45); // Latitude du premier parallèle automécoïque. (rad)
-	// private static $phi2; // = deg2rad((45.652 / 60 + 41) / 60 + 47); // Latitude du second parallèle automécoïque. (rad)
-	// private static $X0 = 600000; // Translation X. (m) (E0)
-	// private static $Y0 = 2200000; // Translation Y. (m) (N0)
-	// private static $s = 0.99987742; // Facteur d'échelle. (k0)
 	
 	// Initialisation des constantes.
 	public static function init() {
 		self::$clarkeEllipsoid = new CoordinateConverterParameters( // Valeurs provenant du fichier Data.txt ligne 6 de Circé France 4.
 			'a', 6378249.2,
 			'b', 6356515,
-			'f', 1 / 293.466021,
+			'f', 1 / 293.4660213,
 			'e2', .006803487646,
 			'e', sqrt(.006803487646),
 			'T', new CoordinateConverterParameters( // Valeurs provenant du fichier Data.txt ligne 44 de Circé France 4.
@@ -44,45 +27,51 @@ class tx_icslibnavitia_CoordinateConverter {
 				'z', 320
 			)
 		);
-		// self::$clarkeEllipsoid->f = 1 - self::$clarkeEllipsoid->b / self::$clarkeEllipsoid->a;
-		// self::$clarkeEllipsoid->e = sqrt(1 - pow(self::$clarkeEllipsoid->b, 2) / pow(self::$clarkeEllipsoid->a, 2));
 		
 		self::$wgs84Ellipsoid = new CoordinateConverterParameters( // Valeurs provenant du fichier Data.txt ligne 7 de Circé France 4.
 			'a', 6378137,
 			'b', 6356752.3141,
-			'f', 1 / 298.257222101, //298.257223563
+			'f', 1 / 298.257223563,
 			'e2', .006694380025,
 			'e', sqrt(.006694380025)
 		);
-		// self::$wgs84Ellipsoid->b = self::$wgs84Ellipsoid->a * (1 - self::$wgs84Ellipsoid->f);
 		
 		self::$lambertIIE = new CoordinateConverterParameters( // Valeurs provenant du fichier Data.txt ligne 57 de Circé France 4.
 			'X0', 600000,
 			'Y0', 2200000,
 			'phi0', deg2rad(52 * .9),
-			'phi1', deg2rad((56.108 / 60 + 53) / 60 + 45),
-			'phi2', deg2rad((45.652 / 60 + 41) / 60 + 47),
+			'phi1', deg2rad(50.99879884 * .9),
+			'phi2', deg2rad(52.99557167 * .9),
 			'lambda0', deg2rad((14.025 / 60 + 20) / 60 + 2),
 			'scale', 0.99987742
 		);
-		// foreach (array('phi0', 'phi1', 'phi2', 'lambda0') as $name)
-			// self::$lambertIIE->$name = deg2rad(self::$lambertIIE->$name);
-		// $tmp = self::$lambertIIE->scale * self::N(self::$lambertIIE->phi0, self::$clarkeEllipsoid->a, self::$clarkeEllipsoid->e2) / tan(self::$lambertIIE->phi0);
 		// Valeurs provenant de la dernière page de NTG_71.pdf
 		self::$lambertIIE->n = .7289686274; // sin(self::$lambertIIE->phi0);
 		self::$lambertIIE->c = 11745793.39; // $tmp * exp(self::$lambertIIE->n * self::L(self::$lambertIIE->phi0, self::$clarkeEllipsoid->e));
 		self::$lambertIIE->Xs = 600000; // self::$lambertIIE->X0;
 		self::$lambertIIE->Ys = 8199695.768; // self::$lambertIIE->Y0 + $tmp;
+		$Lamb_vo1 = self::$clarkeEllipsoid->a / sqrt(1 - self::$clarkeEllipsoid->e2 * (pow(sin(self::$lambertIIE->phi1),2)));
+		$Lamb_vo2 = self::$clarkeEllipsoid->a / sqrt(1 - self::$clarkeEllipsoid->e2 * (pow(sin(self::$lambertIIE->phi2),2)));
+		$Lamb_po1 = self::$clarkeEllipsoid->a * (1 - self::$clarkeEllipsoid->e2) / pow(sqrt(1 - self::$clarkeEllipsoid->e2 * pow(sin(self::$lambertIIE->phi1),2)),3);
+		$Lamb_po2 = self::$clarkeEllipsoid->a * (1 - self::$clarkeEllipsoid->e2) / pow(sqrt(1 - self::$clarkeEllipsoid->e2 * pow(sin(self::$lambertIIE->phi2),2)),3);
+		$Lamb_m1 = 1 + $Lamb_po1 / 2 / $Lamb_vo1 * pow(((self::$lambertIIE->phi1 - self::$lambertIIE->phi0)),2); 
+		$Lamb_m2 = 1 + $Lamb_po2 / 2 / $Lamb_vo2 * pow(((self::$lambertIIE->phi2 - self::$lambertIIE->phi0)),2);
+		$Lamb_m = ($Lamb_m1 + $Lamb_m2) / 2;
+		$Lamb_mL = 2 - $Lamb_m;
+		$Lamb_v0 = self::$clarkeEllipsoid->a / sqrt(1 - self::$clarkeEllipsoid->e2 * (pow(sin(self::$lambertIIE->phi0),2)));
+		$Lamb_R0 = $Lamb_v0 / tan(self::$lambertIIE->phi0);
+		/* mLR0 est le Rayon du parallèle d origine après réduction d echelle */
+		self::$lambertIIE->Lamb_mLR0 = $Lamb_mL * $Lamb_R0;
 	}
 	
 	// Effectue les étapes de la transformation des coordonnées WGS84 géographiques vers la projection Lambert II étendue.
-	public static function convertfromWGS84($lat, $lng) {
+	public static function convertFromWGS84($lat, $lng) {
 		$phi = deg2rad($lat);
 		$lambda = deg2rad($lng);
 		
-		list($X, $Y, $Z) = self::convertGeographicToCartesian($phi, $lambda, self::$wgs84Ellipsoid->a, self::$wgs84Ellipsoid->b);
+		list($X, $Y, $Z) = self::convertGeographicToCartesian($phi, $lambda, self::$wgs84Ellipsoid);
 		list($X, $Y, $Z) = self::translateForNTF($X, $Y, $Z);
-		list($phi, $lambda) = self::convertCartesianToGeographic($X, $Y, $Z, self::$clarkeEllipsoid->a, self::$clarkeEllipsoid->b);
+		list($phi, $lambda) = self::convertCartesianToGeographic($X, $Y, $Z, self::$clarkeEllipsoid);
 		list($X, $Y) = self::convertToLambertIIExtended($phi, $lambda);
 		return array('X' => $X, 'Y' => $Y);
 	}
@@ -90,25 +79,25 @@ class tx_icslibnavitia_CoordinateConverter {
 	// Effectue les étapes de la transformation des coordonnées de la projection Lambert II étendue vers WGS84 géographiques.
 	public static function convertToWGS84($X, $Y) {
 		list($phi, $lambda) = self::convertFromLambertIIExtended($X, $Y);
-		list($X, $Y, $Z) = self::convertGeographicToCartesian($phi, $lambda, self::$clarkeEllipsoid->a, self::$clarkeEllipsoid->b);
+		list($X, $Y, $Z) = self::convertGeographicToCartesian($phi, $lambda, self::$clarkeEllipsoid);
 		list($X, $Y, $Z) = self::translateForWGS84($X, $Y, $Z);
-		list($phi, $lambda) = self::convertCartesianToGeographic($X, $Y, $Z, self::$wgs84Ellipsoid->a, self::$wgs84Ellipsoid->b);
+		list($phi, $lambda) = self::convertCartesianToGeographic($X, $Y, $Z, self::$wgs84Ellipsoid);
 		return array('lat' => rad2deg($phi), 'lng' => rad2deg($lambda));
 	}
 	
 	// Translate les coordonnées cartésiennes de l'ellipsoïde du WGS84 vers l'ellipsoïde Clarke.
 	public static function translateForNTF($X, $Y, $Z) {
-		$X += self::$clarkeEllipsoid->T->x;
-		$Y += self::$clarkeEllipsoid->T->y;
-		$Z += self::$clarkeEllipsoid->T->z;
+		$X -= self::$clarkeEllipsoid->T->x;
+		$Y -= self::$clarkeEllipsoid->T->y;
+		$Z -= self::$clarkeEllipsoid->T->z;
 		return array($X, $Y, $Z);
 	}
 	
 	// Translate les coordonnées cartésiennes de l'ellipsoïde Clarke vers l'ellipsoïde du WGS84.
 	public static function translateForWGS84($X, $Y, $Z) {
-		$X -= self::$clarkeEllipsoid->T->x;
-		$Y -= self::$clarkeEllipsoid->T->y;
-		$Z -= self::$clarkeEllipsoid->T->z;
+		$X += self::$clarkeEllipsoid->T->x;
+		$Y += self::$clarkeEllipsoid->T->y;
+		$Z += self::$clarkeEllipsoid->T->z;
 		return array($X, $Y, $Z);
 	}
 	
@@ -123,7 +112,7 @@ class tx_icslibnavitia_CoordinateConverter {
 	
 	// Transformation de coordonnées cartésiennes en géographiques. Algorithme page 4 de transfo.pdf. Donne les mêmes résultats que ALG0012 de NTG_80.pdf
 	public static function convertCartesianToGeographic($X, $Y, $Z, $ellipsoid) {
-		$R = sqrt(pow($X, 2) + pow($Y, 2) + pow($Z, 2));
+		$R = sqrt(pow($X, 2) + pow($Y, 2) + pow($Z, 2)); // Algo non itératif.
 		$r = sqrt(pow($X, 2) + pow($Y, 2));
 		$ae2 = $ellipsoid->a * $ellipsoid->e2;
 		$lambda = atan($Y / $X);
@@ -134,23 +123,38 @@ class tx_icslibnavitia_CoordinateConverter {
 	
 	// Transformation de coordonnées géographiques NTF en projection de Lambert. ALG0003 de NTG_71.pdf
 	public static function convertToLambertIIExtended($phi, $lambda) {
-		$L = self::L($phi, self::$clarkeEllipsoid->e);
-		$R = self::$lambertIIE->c * exp(- self::$lambertIIE->n * $L);
-		$gamma = self::$lambertIIE->n * ($lambda - self::$lambertIIE->lambda0);
-		$X = self::$lambertIIE->Xs + $R * sin($gamma);
-		$Y = self::$lambertIIE->Ys - $R * cos($gamma);
+		$Lamb_LatIso = log(tan(M_PI / 4 + $phi / 2)) - self::$clarkeEllipsoid->e / 2 * log((1 + self::$clarkeEllipsoid->e * sin($phi))/(1 - self::$clarkeEllipsoid->e * sin($phi)));
+		$Lamb_LatIso0 = log(tan(M_PI / 4 + self::$lambertIIE->phi0 / 2)) - self::$clarkeEllipsoid->e / 2 * log((1 + self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0))/(1 - self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0)));
+		if ($lambda < M_PI) {
+			$Lamb_Gamma = ($lambda - self::$lambertIIE->lambda0) * sin(self::$lambertIIE->phi0);
+		}
+		if ($lambda > M_PI) {
+			$Lamb_Gamma = ($lambda - self::$lambertIIE->lambda0 - 2 * M_PI) * sin(self::$lambertIIE->phi0);
+		}
+		$Lamb_R = self::$lambertIIE->Lamb_mLR0 * exp(- sin(self::$lambertIIE->phi0) * ($Lamb_LatIso - $Lamb_LatIso0));
+		$Lamb_E1 = $Lamb_R * sin($Lamb_Gamma);
+		$X = $Lamb_E1 + self::$lambertIIE->X0;
+		$Y = self::$lambertIIE->Lamb_mLR0 - $Lamb_R + $Lamb_E1 * tan($Lamb_Gamma / 2) + self::$lambertIIE->Y0;
 		return array($X, $Y);
 	}
 	
 	// Transformation de coordonnées en projection de Lambert en géographiques. ALG0004 de NTG_71.pdf
 	public static function convertFromLambertIIExtended($X, $Y) {
-		$dX = $X - self::$lambertIIE->Xs;
-		$dY = $Y - self::$lambertIIE->Ys;
-		$R = sqrt($dX * $dX + $dY * $dY);
-		$gamma = atan(($dX) / (-$dY));
-		$lambda = self::$lambertIIE->lambda0 + $gamma / self::$lambertIIE->n;
-		$L = (-1 / self::$lambertIIE->n) * log(abs($R / self::$lambertIIE->c));
-		$phi = self::Linv($L, self::$clarkeEllipsoid->e);
+		$Lamb_Ls = log(tan(M_PI / 4 + self::$lambertIIE->phi0 / 2)) - self::$clarkeEllipsoid->e / 2 * log((1 + self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0)) / (1 - self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0)));
+		$dX = $X - self::$lambertIIE->X0;
+		$dY = $Y - self::$lambertIIE->Y0;
+		$gamma = atan($dX / (self::$lambertIIE->Lamb_mLR0 - $dY));
+		$lambda = ($gamma / sin(self::$lambertIIE->phi0) + self::$lambertIIE->lambda0);
+		$Lamb_R = (self::$lambertIIE->Lamb_mLR0 - $dY) / cos($gamma);
+		$Lamb_L0 = log(tan(M_PI / 4 + self::$lambertIIE->phi0 / 2)) - (self::$clarkeEllipsoid->e / 2) * log((1 + self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0)) / (1 - self::$clarkeEllipsoid->e * sin(self::$lambertIIE->phi0)));
+		$Lamb_L = $Lamb_L0 + log(self::$lambertIIE->Lamb_mLR0 / $Lamb_R) / sin(self::$lambertIIE->phi0);
+		$epsilon = 1;
+		$phi = 2 * atan(exp($Lamb_L)) - M_PI / 2;
+		while ($epsilon > 1e-10) {
+			$phi1 = 2 * (atan(exp($Lamb_L + self::$clarkeEllipsoid->e / 2 * log((1 + self::$clarkeEllipsoid->e * sin($phi)) / (1 - self::$clarkeEllipsoid->e * sin($phi)))))) - M_PI / 2;
+			$epsilon = abs($phi1 - $phi);
+			$phi = $phi1;
+		}
 		return array($phi, $lambda);
 	}
 	
