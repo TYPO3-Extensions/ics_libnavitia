@@ -2,6 +2,7 @@
 
 class tx_icslibnavitia_Debug {
 	private static $settings = null;
+	private static $urls = array();
 	
 	private static function LoadSettings() {
 		self::$settings = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['ics_libnavitia']);
@@ -20,6 +21,12 @@ class tx_icslibnavitia_Debug {
 			self::$settings['devlog'] = '0';
 			self::$settings['writeXML'] = '0';
 		}
+		if (self::$settings['debug']) {
+			if (self::$settings['debug'] == 2) {
+				self::$settings['debug_echo'] = true;
+			}
+			$GLOBALS['TSFE']->TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-output'][] = 'tx_icslibnavitia_Debug->appendDebugCode';
+		}
 		unset(self::$settings['debug_param']);
 	}
 	
@@ -30,7 +37,10 @@ class tx_icslibnavitia_Debug {
 	
 	public static function Log($message, $url = '', $level = 0, array $data = null) {
 		if (self::$settings['debug'] && $url) {
-			echo '<pre>' . htmlspecialchars($url) . '</pre>' . PHP_EOL;
+			if (self::$settings['debug_echo']) {
+				echo '<pre>' . htmlspecialchars($url) . '</pre>' . PHP_EOL;
+			}
+			self::$urls[] = $url;
 		}
 		if (self::$settings['devlog']) {
 			if ($url) {
@@ -80,6 +90,12 @@ class tx_icslibnavitia_Debug {
 	
 	public static function IsDebugEnabled() {
 		return self::$settings['debug'];
+	}
+	
+	public function appendDebugCode($params, $caller) {
+		if (!empty(self::$urls)) {
+			$params['pObj']->content = str_replace('</body>', '<pre><![CDATA[' . PHP_EOL . implode(PHP_EOL, self::$urls) . PHP_EOL . ']]></pre></body>', $params['pObj']->content);
+		}
 	}
 }
 
