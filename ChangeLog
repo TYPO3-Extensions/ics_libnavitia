@@ -1,5 +1,8 @@
 2013-03-25 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Added TYPO3 version dependency.
+	* Added Impact and Event node.
+	* Added ImpactList in APIService::getDepartureBoard* methods.
+	* Added ImpactList in APIService::getPlanJourney method.
 
 2012-01-17 Pierrick Caillon <pierrick@in-cite.net>
 	* Corrected coordinates conversion using http://www.destineo.fr/extension/NavitiaPack/design/standard/javascript/conversion.js
@@ -54,7 +57,7 @@
 2011-09-29 Pierrick Caillon <pierrick@in-cite.net>
 	* Added Comment node.
 	* Added comment attribut in Stop node. Note declared in XSDs.
-	* Added CommentList in APIService::getDepartireBoard* methods.
+	* Added CommentList in APIService::getDepartureBoard* methods.
 	* Bug fix: Corrected a bug not skipping an XML Node when it does not contain relevant information. Result was then truncated.
 
 2011-09-21 Pierrick Caillon <pierrick@in-cite.net>

@@ -217,9 +217,14 @@ class tx_icslibnavitia_APIService {
 			return null;
 		}
 		$reader->read();
-		$jrList = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_JourneyResult');
-		$commentList = t3lib_div::makeInstance('tx_icslibnavitia_NodeList'/*, 'tx_icslibnavitia_Comment'*/);
-		$result = array('JourneyResultList' => $jrList, 'CommentList' => $commentList);
+		$jrs = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_JourneyResult');
+		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
+		$result = array(
+			'JourneyResultList' => $jrs,
+			'CommentList' => $comments,
+			'ImpactList' => $impacts,
+		);
 		while ($reader->nodeType != XMLReader::END_ELEMENT) {
 			if ($reader->nodeType == XMLReader::ELEMENT) {
 				switch ($reader->name) {
@@ -227,7 +232,13 @@ class tx_icslibnavitia_APIService {
 						$this->SkipChildren($reader);
 						break;
 					case 'JourneyResultList':
-						tx_icslibnavitia_Node::ReadList($reader, $jrList, array('JourneyResult' => 'tx_icslibnavitia_JourneyResult'));
+						tx_icslibnavitia_Node::ReadList($reader, $jrs, array('JourneyResult' => 'tx_icslibnavitia_JourneyResult'));
+						break;
+					case 'CommentList':
+						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+						break;
+					case 'ImpactList':
+						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
 						break;
 					case 'PagerInfo':
 						$this->SkipChildren($reader);
@@ -593,6 +604,7 @@ class tx_icslibnavitia_APIService {
 		$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
 		$destinations = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
 		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
 		$result = array(
 			'StopList' => $stops,
 			'StopPointList' => $stopPoints,
@@ -601,6 +613,7 @@ class tx_icslibnavitia_APIService {
 			'VehicleJourneyList' => $journeys,
 			'DestinationList' => $destinations,
 			'CommentList' => $comments,
+			'ImpactList' => $impacts,
 		);
 		while ($reader->nodeType != XMLReader::END_ELEMENT) {
 			if ($reader->nodeType == XMLReader::ELEMENT) {
@@ -628,6 +641,9 @@ class tx_icslibnavitia_APIService {
 						break;
 					case 'CommentList':
 						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+						break;
+					case 'ImpactList':
+						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
 						break;
 					case 'PagerInfo':
 						$this->SkipChildren($reader);
