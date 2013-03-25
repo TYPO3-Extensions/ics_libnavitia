@@ -1,3 +1,6 @@
+2013-03-25 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Added TYPO3 version dependency.
+
 2012-01-17 Pierrick Caillon <pierrick@in-cite.net>
 	* Corrected coordinates conversion using http://www.destineo.fr/extension/NavitiaPack/design/standard/javascript/conversion.js
 	* Changed Debug output method. Now at the end of the HTML. Can be forced on top with navitia_debug=2 instead of 1.
