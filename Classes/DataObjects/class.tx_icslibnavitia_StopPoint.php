@@ -12,12 +12,12 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 		'city' => 'object:tx_icslibnavitia_City', 
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?', 
 		'coord' => 'object:tx_icslibnavitia_Coord?', 
-		// 'comment' => 'object',
+		'comment' => 'object:tx_icslibnavitia_Comment?',
+		'impactPosList' => 'array',
 	);
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
-		// impactposlist
 	}
 	
 	public function ReadXML(XMLReader $reader) {
@@ -66,6 +66,27 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 				}
 				else
 					tx_icslibnavitia_Node::SkipChildren($reader);
+				break;
+			case 'Comment':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Comment');
+				$obj->ReadXML($reader);
+				$this->__set('comment', $obj);
+				break;
+			case 'ImpactPosList':
+				$impacts = array();
+				if (!$reader->isEmptyElement) {
+					$reader->read();
+					while ($reader->nodeType != XMLReader::END_ELEMENT) {
+						if ($reader->nodeType == XMLReader::ELEMENT) {
+							if ($reader->name == 'ImpactPos') {
+								$impacts[] = (int)$reader->readString();
+							}
+							tx_icslibnavitia_Node::SkipChildren($reader);
+						}
+						$reader->read();
+					}
+				}
+				$this->__set('impactPosList', $impacts);
 				break;
 			default:
 				tx_icslibnavitia_Node::SkipChildren($reader);

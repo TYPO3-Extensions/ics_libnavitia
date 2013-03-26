@@ -17,7 +17,7 @@ class tx_icslibnavitia_Event extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		$this->_ReadXML($reader, 'Address');
+		$this->_ReadXML($reader, 'Event');
 	}
 	
 	protected function ReadInit() {

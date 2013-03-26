@@ -18,13 +18,13 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?',
 		'vehicleJourney' => 'object:tx_icslibnavitia_VehicleJourney?',
 		'comment' => 'object:tx_icslibnavitia_Comment?',	// Not in XSD but in real results.
+		'impactPosList' => 'array',
 		'route' => 'object:tx_icslibnavitia_Route?',
 		'vehicleJourneyNameAtStop' => 'string',
 	);
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
-		// impactposlist
 	}
 	
 	public function ReadXML(XMLReader $reader) {
@@ -101,6 +101,22 @@ class tx_icslibnavitia_Stop extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Comment');
 				$obj->ReadXML($reader);
 				$this->__set('comment', $obj);
+				break;
+			case 'ImpactPosList':
+				$impacts = array();
+				if (!$reader->isEmptyElement) {
+					$reader->read();
+					while ($reader->nodeType != XMLReader::END_ELEMENT) {
+						if ($reader->nodeType == XMLReader::ELEMENT) {
+							if ($reader->name == 'ImpactPos') {
+								$impacts[] = (int)$reader->readString();
+							}
+							tx_icslibnavitia_Node::SkipChildren($reader);
+						}
+						$reader->read();
+					}
+				}
+				$this->__set('impactPosList', $impacts);
 				break;
 			case 'Route':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Route');

@@ -33,7 +33,7 @@ class tx_icslibnavitia_Impact extends tx_icslibnavitia_Node {
 	}
 	
 	public function ReadXML(XMLReader $reader) {
-		$this->_ReadXML($reader, 'Address');
+		$this->_ReadXML($reader, 'Impact');
 	}
 	
 	protected function ReadAttribute(XMLReader $reader) {

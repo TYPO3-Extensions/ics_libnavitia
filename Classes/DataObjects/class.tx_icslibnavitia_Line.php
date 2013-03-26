@@ -12,15 +12,15 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 		'color' => 'string',
 		'adaptedRoute' => 'bool',
 		'modeType' => 'object:tx_icslibnavitia_ModeType',
-		// 'comment' => 'object',
+		'comment' => 'object:tx_icslibnavitia_Comment?',
 		'network' => 'object:tx_icslibnavitia_Network',
 		'forward' => 'object:tx_icslibnavitia_Forward',
 		'backward' => 'object:tx_icslibnavitia_Backward',
+		'impactPosList' => 'array',
 	);
 
 	public function __construct() {
 		parent::__construct(get_class($this) . '::$fields');
-		// impactposlist
 	}
 	
 	public function ReadXML(XMLReader $reader) {
@@ -71,6 +71,11 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 				$obj->ReadXML($reader);
 				$this->__set('network', $obj);
 				break;
+			case 'Comment':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Comment');
+				$obj->ReadXML($reader);
+				$this->__set('comment', $obj);
+				break;
 			case 'Forward':
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Forward');
 				$obj->ReadXML($reader);
@@ -80,6 +85,22 @@ class tx_icslibnavitia_Line extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Backward');
 				$obj->ReadXML($reader);
 				$this->__set('backward', $obj);
+				break;
+			case 'ImpactPosList':
+				$impacts = array();
+				if (!$reader->isEmptyElement) {
+					$reader->read();
+					while ($reader->nodeType != XMLReader::END_ELEMENT) {
+						if ($reader->nodeType == XMLReader::ELEMENT) {
+							if ($reader->name == 'ImpactPos') {
+								$impacts[] = (int)$reader->readString();
+							}
+							tx_icslibnavitia_Node::SkipChildren($reader);
+						}
+						$reader->read();
+					}
+				}
+				$this->__set('impactPosList', $impacts);
 				break;
 			default:
 				tx_icslibnavitia_Node::SkipChildren($reader);
