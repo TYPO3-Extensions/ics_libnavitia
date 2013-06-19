@@ -1,3 +1,7 @@
+2013-06-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Added APIService::getStopAreasByLineCode.
+	* Bug Fix.
+
 2013-03-26 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Fix: Impact and Event element name.
 	* Fix: Missing Comment node parsing.
