@@ -718,7 +718,34 @@ class tx_icslibnavitia_APIService {
 		}
 		return $list;
 	}
-	
+
+	/** Binary Criteria, Vehicle: Requires a vehicle with MIP access. */
+	const CRITERIA_VEHICLE_MIP = 'VKMIPAccess';
+	/** Binary Criteria, Vehicle: Requires a vehicle accepting bikes. */
+	const CRITERIA_VEHICLE_BIKE = 'VKBikeAccepted';
+	/** Binary Criteria, Vehicle: Requires a vehicle with air conditioning. */
+	const CRITERIA_VEHICLE_AIR_CONDITIONING = 'VKAirConditioned';
+	/** Binary Criteria, Vehicle: Requires a vehicle with visual display. */
+	const CRITERIA_VEHICLE_VISUAL_NOTICE = 'VKVisualAnnoucement';
+	/** Binary Criteria, Vehicle: Requires a vehicle with audible notice. */
+	const CRITERIA_VEHICLE_AUDIBLE_NOTICE = 'VKAudibleAnnoucement';
+	/** Binary Criteria, Stop point: Requires a stop point with shelter. */
+	const CRITERIA_STOP_SHELTERED = 'SPSheltered';
+	/** Binary Criteria, Stop point: Requires a stop point designed for MIP access. */
+	const CRITERIA_STOP_MIP = 'SPMIPAccess';
+	/** Binary Criteria, Stop point: Requires a stop point with an elevator. */
+	const CRITERIA_STOP_ELEVATOR = 'SPElevator';
+	/** Binary Criteria, Stop point: Requires a stop point with an escalator. */
+	const CRITERIA_STOP_ESCALATOR = 'SPEscalator';
+	/** Binary Criteria, Stop point: Requires a stop point with bike access. */
+	const CRITERIA_STOP_BIKE = 'SPBikeAccepted';
+	/** Binary Criteria, Stop point: Requires a stop point with a bike park. */
+	const CRITERIA_STOP_BIKE_PARK = 'SPBikeDepot';
+	/** Binary Criteria, Stop point: Requires a stop point with visual display. */
+	const CRITERIA_STOP_VISUAL_NOTICE = 'SPVisualAnnoucement';
+	/** Binary Criteria, Stop point: Requires a stop point with audible notice. */
+	const CRITERIA_STOP_AUDIBLE_NOTICE = 'SPAudibleAnnoucement';
+
 	/**
 	 * Query the MakeBinaryCriteria API function for criteria value.
 	 * 
@@ -727,20 +754,29 @@ class tx_icslibnavitia_APIService {
 	 * @return array The array with creteria values: Vehicle, StopPointEquipment, ModeType.
 	 */
 	public function getBinaryCriteria(array $modeTypeExternalCodes, array $flags = array()) {
+		static $availableFlags = null;
+		if ($availableFlags == null) {
+			$availableFlags = (new ReflectionClass(get_class($this)))->getConstants();
+			foreach (array_keys($availableFlags) as $key) {
+				if (!preg_match('/^CRITERIA/', $key)) unset($availableFlags[$key]);
+			}
+		}
 		$params = array();
-		// TODO: Use flags and validate available keys.
+		foreach ($flags as $flag) {
+			if (in_array($flag, $availableFlags)) $params[$flag] = 1;
+		}
 		if (!empty($modeTypeExternalCodes)) {
 			$params['ModeTypeExternalCode'] = implode(';', $modeTypeExternalCodes);
 		}
 		$xml = $this->CallAPI('MakeBinaryCriteria', $params);
 		if (!$xml) {
-			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			tx_icslibnavitia_Debug::warning('Failed to call MakeBinaryCriteria API; See devlog for additional information');
 			return null;
 		}
 		$reader = new XMLReader();
 		$reader->XML($xml);
 		if (!$this->XMLMoveToRootElement($reader, 'BinaryCriteria')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			tx_icslibnavitia_Debug::warning('Invalid response from MakeBinaryCriteria API; See saved response for additional information');
 			return null;
 		}
 		$reader->read();

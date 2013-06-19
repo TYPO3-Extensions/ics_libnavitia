@@ -1,6 +1,8 @@
 2013-03-26 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Fix: Impact and Event element name.
 	* Fix: Missing Comment node parsing.
+	* Added all BinaryCriteria flags as constants.
+	* Added flags support in APIService::getBinaryCriteria.
 
 2013-03-25 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Added TYPO3 version dependency.
