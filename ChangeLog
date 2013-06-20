@@ -1,4 +1,5 @@
 2013-06-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Added APIService::getDepartureBoardByStopAreaForLine.
 	* Added APIService::getStopAreasByLineCode.
 	* Added Vehicule and Equipment nodes.
 

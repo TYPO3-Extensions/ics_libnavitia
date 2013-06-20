@@ -17,11 +17,6 @@ class tx_icslibnavitia_Vehicle extends tx_icslibnavitia_Node {
 		$this->_ReadXML($reader, 'Vehicle');
 	}
 	
-	protected function ReadInit() {
-		parent::ReadInit();
-		$this->values['stopList']->Clear();
-	}
-	
 	protected function ReadAttribute(XMLReader $reader) {
 		switch ($reader->name) {
 			case 'VehicleId':

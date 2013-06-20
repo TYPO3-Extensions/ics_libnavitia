@@ -635,7 +635,7 @@ class tx_icslibnavitia_APIService {
 						$this->SkipChildren($reader);
 						break;
 					case 'StopPointList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopPoint'));
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
 						break;
 					case 'PagerInfo':
 						$this->SkipChildren($reader);
@@ -650,7 +650,7 @@ class tx_icslibnavitia_APIService {
 	}
 	
 	/**
-	 * Query the DepartureBoard API function.
+	 * Query the DepartureBoard API function. Using stop point.
 	 *
 	 * @param string $stopPointExternalCode The unique identifier of the stop point.
 	 * @param string $lineExternalCode The unique identifier of the line.
@@ -667,8 +667,52 @@ class tx_icslibnavitia_APIService {
 	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
 	 */
 	public function getDepartureBoardByStopPointForLine($stopPointExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
+		return $this->_getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, false, $lineExternalCode, $when, $forward, $startDayAt);
+	}
+	
+	/**
+	 * Query the DepartureBoard API function. Using stop area.
+	 *
+	 * @param string $stopAreaExternalCode The unique identifier of the stop area.
+	 * @param string $lineExternalCode The unique identifier of the line.
+	 * @param DateTime $when For which date to query the departure board.
+	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
+	 * @param integer $startDayAt Number of minutes after midnight to set at the day start time. It is used to offset the time range like for TV shows.
+	 *        For example, if set to 300 (5h00), the search will start at 5 o'clock for the current search day and end before 5 o'clock the next day.
+	 * @return array The list of results and additional information. 
+	 *        Results are in the {@link tx_icslibnavitia_NodeList} in <code>StopList</code> key. Each element is a {@link tx_icslibnavitia_Stop};
+	 *        Stop points are in the {@link tx_icslibnavitia_NodeList} in <code>StopPointList</code> key. Each element is a {@link tx_icslibnavitia_StopPoint};
+	 *        Lines are in the {@link tx_icslibnavitia_NodeList} in <code>LineList</code> key. Each element is a {@link tx_icslibnavitia_Line};
+	 *        Routes are in the {@link tx_icslibnavitia_NodeList} in <code>RouteList</code> key. Each element is a {@link tx_icslibnavitia_Route};
+	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
+	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
+	 */
+	public function getDepartureBoardByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
+		return $this->_getDepartureBoardByStopPointOrAreaForLine(false, $stopAreaExternalCode, $lineExternalCode, $when, $forward, $startDayAt);
+	}
+	
+	/**
+	 * Query the DepartureBoard API function.
+	 *
+	 * @param string $stopPointExternalCode The unique identifier of the stop point.
+	 * @param string $stopAreaExternalCode The unique identifier of the stop area.
+	 * @param string $lineExternalCode The unique identifier of the line.
+	 * @param DateTime $when For which date to query the departure board.
+	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
+	 * @param integer $startDayAt Number of minutes after midnight to set at the day start time. It is used to offset the time range like for TV shows.
+	 *        For example, if set to 300 (5h00), the search will start at 5 o'clock for the current search day and end before 5 o'clock the next day.
+	 * @return array The list of results and additional information. 
+	 *        Results are in the {@link tx_icslibnavitia_NodeList} in <code>StopList</code> key. Each element is a {@link tx_icslibnavitia_Stop};
+	 *        Stop points are in the {@link tx_icslibnavitia_NodeList} in <code>StopPointList</code> key. Each element is a {@link tx_icslibnavitia_StopPoint};
+	 *        Lines are in the {@link tx_icslibnavitia_NodeList} in <code>LineList</code> key. Each element is a {@link tx_icslibnavitia_Line};
+	 *        Routes are in the {@link tx_icslibnavitia_NodeList} in <code>RouteList</code> key. Each element is a {@link tx_icslibnavitia_Route};
+	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
+	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
+	 */
+	private function _getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, $stopAreaExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
 		$params = array();
-		$params['StopPointExternalCode'] = $stopPointExternalCode;
+		if ($stopPointExternalCode) $params['StopPointExternalCode'] = $stopPointExternalCode;
+		if ($stopAreaExternalCode)$params['StopAreaExternalCode'] = $stopAreaExternalCode;
 		$params['LineExternalCode'] = $lineExternalCode;
 		$params['Sens'] = $forward ? 1 : -1;
 		if ($when == null)

@@ -13,11 +13,6 @@ class tx_icslibnavitia_Equipment extends tx_icslibnavitia_Node {
 		$this->_ReadXML($reader, 'Equipment');
 	}
 	
-	protected function ReadInit() {
-		parent::ReadInit();
-		$this->values['stopList']->Clear();
-	}
-	
 	protected function ReadAttribute(XMLReader $reader) {
 		switch ($reader->name) {
 			case 'MIPAccess':
