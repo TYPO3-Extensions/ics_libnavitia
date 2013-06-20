@@ -1,6 +1,6 @@
 <?php
 
-class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
+class tx_icslibnavitia_Vehicle extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'id' => 'int',
 		'idx' => 'int',

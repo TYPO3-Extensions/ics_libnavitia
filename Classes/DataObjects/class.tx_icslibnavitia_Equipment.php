@@ -1,6 +1,6 @@
 <?php
 
-class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
+class tx_icslibnavitia_Equipment extends tx_icslibnavitia_Node {
 	static $fields = array(
 		'mipAccess' => 'string',// and others
 	);
