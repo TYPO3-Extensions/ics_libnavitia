@@ -602,6 +602,52 @@ class tx_icslibnavitia_APIService {
 		}
 		return $list;
 	}
+
+	/**
+	 * Query the PTReferential API function for StopPointList for a single line.
+	 *
+	 * @param string $lineExternalCode The unique identifier of the line.
+	 * @return tx_icslibnavitia_INodeList The list of line attached stop points. Each element is a {@link tx_icslibnavitia_StopPoint}.
+	 */
+	public function getStopPointsByLineCode($lineExternalCode) {
+		$params = array();
+		$params['RequestedType'] = 'StopPointList';
+		if ($lineExternalCode !== null) {
+			$params['LineExternalCode'] = $lineExternalCode;
+		}
+		$xml = $this->CallAPI('PTReferential', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionStopPointList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'StopPointList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopPoint'));
+						break;
+					case 'PagerInfo':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $list;
+	}
 	
 	/**
 	 * Query the DepartureBoard API function.

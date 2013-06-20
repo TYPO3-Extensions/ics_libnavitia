@@ -14,7 +14,7 @@ class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
 		'origin' => 'object:tx_icslibnavitia_StopArea?',
 		'mode' => 'object:tx_icslibnavitia_Mode',
 		// 'company' => 'object:tx_icslibnavitia_',
-		// 'vehicle' => 'object:tx_icslibnavitia_',
+		'vehicle' => 'object:tx_icslibnavitia_Vehicle',
 		// 'validityPattern' => 'object:tx_icslibnavitia_',
 		'impactPosList' => 'array',
 	);
@@ -76,6 +76,11 @@ class tx_icslibnavitia_VehicleJourney extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Mode');
 				$obj->ReadXML($reader);
 				$this->__set('mode', $obj);
+				break;
+			case 'Vehicle':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Vehicle');
+				$obj->ReadXML($reader);
+				$this->__set('vehicle', $obj);
 				break;
 			case 'StopList':
 				tx_icslibnavitia_Node::ReadList($reader, $this->values['stopList'], array('Stop', 'tx_icslibnavitia_Stop'));

@@ -7,7 +7,7 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 		'name' => 'string',
 		'externalCode' => 'string',
 		// 'address' => 'object:', 
-		// 'equipment' => 'object:', 
+		'equipment' => 'object:tx_icslibnavitia_Equipment', 
 		'mode' => 'object:tx_icslibnavitia_Mode', 
 		'city' => 'object:tx_icslibnavitia_City', 
 		'stopArea' => 'object:tx_icslibnavitia_StopArea?', 
@@ -57,6 +57,11 @@ class tx_icslibnavitia_StopPoint extends tx_icslibnavitia_Node {
 				$obj = t3lib_div::makeInstance('tx_icslibnavitia_StopArea');
 				$obj->ReadXML($reader);
 				$this->__set('stopArea', $obj);
+				break;
+			case 'Equipment':
+				$obj = t3lib_div::makeInstance('tx_icslibnavitia_Equipment');
+				$obj->ReadXML($reader);
+				$this->__set('equipment', $obj);
 				break;
 			case 'Coord':
 				if (!$reader->isEmptyElement && (strlen($reader->readString()) > 0)) {
