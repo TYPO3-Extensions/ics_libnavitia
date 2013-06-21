@@ -1,4 +1,7 @@
-2013-06-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+2013-06-21 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Added cache scheduler task and required dependencies.
+
+2013-06-20 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Added APIService::getDepartureBoardByStopAreaForLine.
 	* Added APIService::getStopAreasByLineCode.
 	* Added Vehicule and Equipment nodes.

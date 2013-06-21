@@ -10,9 +10,26 @@
 class tx_icslibnavitia_APIService {
 	private static $convObj = null;
 	const INTERFACE_VERSION = '1_16';
+	const CACHE_DIR = 'typo3temp/libnavitia/cache/';
 	private $serviceUrl;
 	private $statId;
 	private $lastParams = array();
+	protected static $cacheable = array(
+		'AddressList',
+		'AddressTypeList',
+		'ContributorList',
+		'DirectStopAreaList',
+		'EndOfCourse',
+		'LineRouteDescription',
+		'LineStopAreaList',
+		'MakeBinaryCriteria',
+		'PTReferential',
+		'RoutePointList',
+		'SiteList',
+		'SiteTypeList',
+		'VPatternSetList',
+		'VPTranslator'
+	);
 
 	/**
 	 *
@@ -25,6 +42,10 @@ class tx_icslibnavitia_APIService {
 		$this->statId = $login;
 	}
 	
+	public static function checkCacheFolder() {
+		t3lib_div::mkdir_deep(PATH_site, tx_icslibnavitia_APIService::CACHE_DIR);
+	}
+	
 	/**
 	 * Does a RAW call to a NAViTiA API fonction.
 	 *
@@ -33,21 +54,72 @@ class tx_icslibnavitia_APIService {
 	 * @return mixed The response data or FALSE if failed.
 	 */
 	public function CallAPI($action, array $params) {
+		$cached = null;
+		if (!defined('LIBNAVITIA_CACHING')) {
+			$cacheRow = array(
+				$this->serviceUrl,
+				$this->statId,
+				'API',
+				$action,
+				$params
+			);
+			$hash = md5(serialize($cacheRow));
+			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
+			if (file_exists($path)) {
+				$cached = t3lib_div::getURL($path, 0, false, $report);
+			}
+		}
 		$params['Interface'] = self::INTERFACE_VERSION;
 		if ($this->statId)
 			$params['login'] = $this->statId;
 		$this->lastParams = $params;
 		self::$convObj->convArray($params, $GLOBALS['TSFE'] ? $GLOBALS['TSFE']->renderCharset : $GLOBALS['LANG']->charSet, self::$convObj->parse_charset('ISO-8859-1'));
 		$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
-		$this->lastParams['RequestUrl'] = t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
+		if (!defined('LIBNAVITIA_CACHING')) {
+			$this->lastParams['RequestUrl'] = t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
+		}
 		$this->lastParams['Function'] = 'API';
 		$this->lastParams['Action'] = $action;
 		$url = $this->serviceUrl . '/API?Action=' . urlencode($action) . t3lib_div::implodeArrayForUrl('', $params);
-		$report = array();
-		$result = t3lib_div::getURL($url, 0, false, $report);
+		if ($cached === null) {
+			$report = array();
+			$result = t3lib_div::getURL($url, 0, false, $report);
+		}
+		else {
+			$result = $cached;
+			$report = array('fromCache' => 1);
+			$GLOBALS['TYPO3_DB']->exec_UPDATEquery(
+				'tx_icslibnavitia_cachedrequests',
+				'hash = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'tx_icslibnavitia_cachedrequests'),
+				array('usedLast' => time())
+			);
+		}
 		tx_icslibnavitia_Debug::Log('Call to NAViTiA API', $url, $result ? 0 : 1, $report);
 		if ($result) {
 			tx_icslibnavitia_Debug::WriteResponse($action, $result);
+			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING') && (in_array($action, self::$cacheable))) {
+				self::checkCacheFolder();
+				t3lib_div::writeFileToTypo3tempDir($path, $result);
+				if (!$GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
+					'hash',
+					'tx_icslibnavitia_cachedrequests',
+					'hash = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'tx_icslibnavitia_cachedrequests')
+				)) {
+					$GLOBALS['TYPO3_DB']->exec_INSERTquery(
+						'tx_icslibnavitia_cachedrequests',
+						array(
+							'hash' => $hash,
+							'updated' => time(),
+							'usedLast' => time(),
+							'url' => $cacheRow[0],
+							'login' => $cacheRow[1],
+							'function' => $cacheRow[2],
+							'action' => $cacheRow[3],
+							'parameters' => serialize($cacheRow[4]),
+						)
+					);
+				}
+			}
 		}
 		return $result;
 	}

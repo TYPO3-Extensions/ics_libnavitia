@@ -6,7 +6,7 @@ class tx_icslibnavitia_Vehicle extends tx_icslibnavitia_Node {
 		'idx' => 'int',
 		'name' => 'string',
 		'externalCode' => 'string',
-		'mipAccess' => 'string',// and others
+		'mipAccess' => 'bool',// and others
 	);
 
 	public function __construct() {
@@ -32,7 +32,7 @@ class tx_icslibnavitia_Vehicle extends tx_icslibnavitia_Node {
 				$this->__set('externalCode', $reader->value);
 				break;
 			case 'MIPAccess':
-				$this->__set('mipAccess', (int)$reader->value);
+				$this->__set('mipAccess', $reader->value == 'True');
 				break;
 		}
 	}

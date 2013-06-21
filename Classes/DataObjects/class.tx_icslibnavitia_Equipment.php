@@ -2,7 +2,7 @@
 
 class tx_icslibnavitia_Equipment extends tx_icslibnavitia_Node {
 	static $fields = array(
-		'mipAccess' => 'string',// and others
+		'mipAccess' => 'bool',// and others
 	);
 
 	public function __construct() {
@@ -16,7 +16,7 @@ class tx_icslibnavitia_Equipment extends tx_icslibnavitia_Node {
 	protected function ReadAttribute(XMLReader $reader) {
 		switch ($reader->name) {
 			case 'MIPAccess':
-				$this->__set('mipAccess', (int)$reader->value);
+				$this->__set('mipAccess', $reader->value == 'True');
 				break;
 		}
 	}
