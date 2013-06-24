@@ -19,7 +19,6 @@ class tx_icslibnavitia_APIService {
 		'AddressTypeList',
 		'ContributorList',
 		'DirectStopAreaList',
-		'EndOfCourse',
 		'LineRouteDescription',
 		'LineStopAreaList',
 		'MakeBinaryCriteria',
@@ -959,13 +958,13 @@ class tx_icslibnavitia_APIService {
 	 * 
 	 * @param array $modeTypeExternalCodes The list of mode type external code to restrict the criteria to. Use the element <code>All</code> alone to select all.
 	 * @param array $flags The boolean flags to add to the criteria. Optional. Default to none.
-	 * @return array The array with creteria values: Vehicle, StopPointEquipment, ModeType.
+	 * @return array The array with criteria values: Vehicle, StopPointEquipment, ModeType.
 	 */
 	public function getBinaryCriteria(array $modeTypeExternalCodes, array $flags = array()) {
 		static $availableFlags = null;
 		if ($availableFlags == null) {
 			$reflection = new ReflectionClass(get_class($this));
-			$availableFlags = $reflexion->getConstants();
+			$availableFlags = $reflection->getConstants();
 			foreach (array_keys($availableFlags) as $key) {
 				if (!preg_match('/^CRITERIA/', $key)) unset($availableFlags[$key]);
 			}
@@ -1183,5 +1182,54 @@ class tx_icslibnavitia_APIService {
 			$reader->read();
 		}
 		return $list;
+	}
+
+	/**
+	 * Query the EnOfCourse API function.
+	 *
+	 * @param int $stopIdx The internal identifier of the reference stop.
+	 * @return array The list of stop points, beside the vehicule journey.
+	 */
+	public function getEndOfCourseByStopIdx($stopIdx) {
+		$params = array(
+			'StopIdx' => $stopIdx,
+		);
+		$xml = $this->CallAPI('EndOfCourse', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call EndOfCourse API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'EndOfCourseList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from EndOfCourse API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+		$vj = null;
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'StopList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('Stop' => 'tx_icslibnavitia_Stop'));
+						break;
+					case 'VehiculeJourney':
+						$vj = t3lib_div::makeInstance('tx_icslibnavitia_VehicleJourney');
+						$vj->ReadXML($reader);
+						break;
+					case 'PagerInfo':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return array('stops' => $list, 'vehiculeJourney' => $vj);
 	}
 }
