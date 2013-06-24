@@ -1232,4 +1232,166 @@ class tx_icslibnavitia_APIService {
 		}
 		return array('stops' => $list, 'vehiculeJourney' => $vj);
 	}
+	
+	/**
+	 * Query the PTReferential API function for CityList.
+	 *
+	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
+	 * @return tx_icslibnavitia_INodeList The list of available cities. Each element is a {@link tx_icslibnavitia_City}.
+	 */
+	public function getCityList(tx_icslibnavitia_INodeList $networks = null) {
+		return $this->_getCityList($networks);
+	}
+	
+	/**
+	 * Query the PTReferential API function for CityList.
+	 *
+	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
+	 * @param array $filters Other elements external codes. Available filters are: ModeType, Mode, Company, VehicleJourney, Connection, StopPoint, StopArea, RoutePoint, Route, District, Department, City, ODT, Destination.
+	 *        Each filter is an array of externalCodes.
+	 * @return tx_icslibnavitia_INodeList The list of available cities. Each element is a {@link tx_icslibnavitia_City}.
+	 */
+	private function _getCityList(tx_icslibnavitia_INodeList $networks = null, array $filters = array()) {
+		$params = array();
+		$params['RequestedType'] = 'CityList';
+		if ($networks != null) {
+			$networkCodes = array();
+			foreach ($networks->ToArray() as $network) {
+				if ($network instanceof tx_icslibnavitia_Network) {
+					if (!empty($network->externalCode)) {
+						$networkCodes[] = $network->externalCode;
+					}
+				}
+			}
+			if (!empty($networkCodes)) {
+				$params['NetworkExternalCode'] = implode(';', $networkCodes);
+			}
+		}
+		if ($lineExternalCode !== null) {
+			$params['LineExternalCode'] = $lineExternalCode;
+		}
+		else if (!empty($filters)) {
+			foreach ($filters as $type => $values) {
+				$params[$type . 'ExternalCode'] = implode(';', $values);
+			}
+		}
+		$xml = $this->CallAPI('PTReferential', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'ActionCityList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_City');
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'CityList':
+						tx_icslibnavitia_Node::ReadList($reader, $list, array('City' => 'tx_icslibnavitia_City'));
+						break;
+					case 'PagerInfo':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $list;
+	}
+	
+	/**
+	 * Query the LineSchedule API function.
+	 *
+	 * @param string $departureStopAreaExternalCode The unique identifier of the departure stop area.
+	 * @param string $arrivalStopAreaExternalCode The unique identifier of the arrival stop area.
+	 * @param DateTime $when For which date to query the line schedule.
+	 * @param integer $startDayAt Number of minutes after midnight to set at the day start time. It is used to offset the time range like for TV shows.
+	 *        For example, if set to 300 (5h00), the search will start at 5 o'clock for the current search day and end before 5 o'clock the next day.
+	 * @return array The list of results and additional information. 
+	 *        Results are in the {@link tx_icslibnavitia_NodeList} in <code>StopList</code> key. Each element is a {@link tx_icslibnavitia_Stop};
+	 *        Stop points are in the {@link tx_icslibnavitia_NodeList} in <code>StopPointList</code> key. Each element is a {@link tx_icslibnavitia_StopPoint};
+	 *        Routes are in the {@link tx_icslibnavitia_NodeList} in <code>RouteList</code> key. Each element is a {@link tx_icslibnavitia_Route};
+	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
+	 */
+	public function getLineScheduleByStopArea($departureStopAreaExternalCode, $arrivalStopAreaExternalCode, DateTime $when = null, $startDayAt = 0) {
+		$params = array();
+		$params['DepartureExternalCode'] = $departureStopAreaExternalCode;
+		$params['ArrivalExternalCode'] = $arrivalStopAreaExternalCode;
+		if ($when == null)
+			$when = new DateTime();
+		$params['Date'] = $when->format('Y|m|d');
+		$startDayAt %= 1440; // 1440 minutes = 24 hours.
+		if ($startDayAt > 0)
+			$params['DateChangeTime'] = sprintf('%d|%d', $startDayAt / 60, $startDayAt % 60);
+		$xml = $this->CallAPI('LineSchedule', $params);
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call LineSchedule API; See devlog for additional information');
+			return null;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'LineScheduleList')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from LineSchedule API; See saved response for additional information');
+			return null;
+		}
+		$reader->read();
+		$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+		$stopPoints = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
+		$routes = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Route');
+		$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
+		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
+		$result = array(
+			'StopList' => $stops,
+			'StopPointList' => $stopPoints,
+			'RouteList' => $routes,
+			'VehicleJourneyList' => $journeys,
+			'CommentList' => $comments,
+			'ImpactList' => $impacts,
+		);
+		while ($reader->nodeType != XMLReader::END_ELEMENT) {
+			if ($reader->nodeType == XMLReader::ELEMENT) {
+				switch ($reader->name) {
+					case 'Params':
+						$this->SkipChildren($reader);
+						break;
+					case 'StopList':
+						tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
+						break;
+					case 'StopPointList':
+						tx_icslibnavitia_Node::ReadList($reader, $stopPoints, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
+						break;
+					case 'RouteList':
+						tx_icslibnavitia_Node::ReadList($reader, $routes, array('Route' => 'tx_icslibnavitia_Route'));
+						break;
+					case 'VehicleJourneyList':
+						tx_icslibnavitia_Node::ReadList($reader, $journeys, array('VehicleJourney' => 'tx_icslibnavitia_VehicleJourney'));
+						break;
+					case 'CommentList':
+						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+						break;
+					case 'ImpactList':
+						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
+						break;
+					case 'PagerInfo':
+						$this->SkipChildren($reader);
+						break;
+					default:
+						$this->SkipChildren($reader);
+				}
+			}
+			$reader->read();
+		}
+		return $result;
+	}
 }

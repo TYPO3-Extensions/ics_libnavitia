@@ -1,3 +1,7 @@
+2013-06-24 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Added APIService::getCityList.
+	* Added APIService::getLineScheduleByStopArea.
+
 2013-06-21 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Added cache scheduler task and required dependencies.
 	* Added APIService::getEndOfCourseByStopIdx.
