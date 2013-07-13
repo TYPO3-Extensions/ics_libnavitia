@@ -1,3 +1,7 @@
+2013-07-13 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: Instantiated nodes are put in a repository by externalCode or idx.
+	* Feature: Recall node instance from repository in node getter when the node have a related idx or externalCode attribute.
+
 2013-06-27 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Change: All requested are cached. Previously not cached items are removed upon cache update.
 

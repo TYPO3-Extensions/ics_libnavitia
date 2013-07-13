@@ -34,6 +34,12 @@ abstract class tx_icslibnavitia_Node {
 	 * @access protected
 	 */
 	protected $values;
+	/**
+	 * Instanciated item repository.
+	 * @var array
+	 * @access protected
+	 */
+	protected static $repository = array();
 
 	/**
 	 * Retrieves a fields definition array.
@@ -96,6 +102,15 @@ abstract class tx_icslibnavitia_Node {
 	}
 
 	public function __get($name) {
+		if (isset($this->fields[$name]) && (strpos($this->fields[$name], 'object:') !== false) && !$this->values[$name]) {
+			foreach (array('externalCode', 'idx') as $nameId) {
+				$id = $name . ucfirst($nameId);
+				if (isset($this->fields[$id]) && isset(self::$repository[ucfirst($name)][$nameId][$this->$id])) {
+					$this->$name = self::$repository[ucfirst($name)][$nameId][$this->$id];
+					break;
+				}
+			}
+		}
 		if (array_key_exists($name, $this->values))
 			return $this->values[$name];
 		tx_icslibnavitia_Debug::notice('Undefined property via __get(): ' . $name);
@@ -115,6 +130,11 @@ abstract class tx_icslibnavitia_Node {
 				return;
 			}
 			$this->values[$name] = $value;
+			if (in_array($name, array('externalCode', 'idx'))) {
+				list($type) = explode('_', strrev(get_class($this)));
+				$type = strrev($type);
+				self::$repository[$type][$name][$value] = $this;
+			}
 			return;
 		}
 		tx_icslibnavitia_Debug::notice('Undefined property via __set(): ' . $name);
