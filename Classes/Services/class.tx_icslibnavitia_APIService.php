@@ -96,7 +96,7 @@ class tx_icslibnavitia_APIService {
 		tx_icslibnavitia_Debug::Log('Call to NAViTiA API', $url, $result ? 0 : 1, $report);
 		if ($result) {
 			tx_icslibnavitia_Debug::WriteResponse($action, $result);
-			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING') && (in_array($action, self::$cacheable))) {
+			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING')) {
 				self::checkCacheFolder();
 				t3lib_div::writeFileToTypo3tempDir($path, $result);
 				if (!$GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
@@ -104,18 +104,23 @@ class tx_icslibnavitia_APIService {
 					'tx_icslibnavitia_cachedrequests',
 					'hash = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'tx_icslibnavitia_cachedrequests')
 				)) {
-					$GLOBALS['TYPO3_DB']->exec_INSERTquery(
-						'tx_icslibnavitia_cachedrequests',
-						array(
-							'hash' => $hash,
-							'updated' => time(),
+					$req = array(
+						'hash' => $hash,
+						'updated' => time(),
+					);
+					if (in_array($action, self::$cacheable)) {
+						$req = $req + array(
 							'usedLast' => time(),
 							'url' => $cacheRow[0],
 							'login' => $cacheRow[1],
 							'function' => $cacheRow[2],
 							'action' => $cacheRow[3],
 							'parameters' => serialize($cacheRow[4]),
-						)
+						);
+					}
+					$GLOBALS['TYPO3_DB']->exec_INSERTquery(
+						'tx_icslibnavitia_cachedrequests',
+						$req
 					);
 				}
 			}

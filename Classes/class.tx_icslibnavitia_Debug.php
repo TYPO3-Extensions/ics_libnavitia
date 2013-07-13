@@ -37,12 +37,12 @@ class tx_icslibnavitia_Debug {
 	
 	public static function Log($message, $url = '', $level = 0, array $data = null) {
 		if (self::$settings['debug'] && $url) {
-			if (self::$settings['debug_echo']) {
+			if (self::$settings['debug_echo'] && !defined('LIBNAVITIA_CACHING')) {
 				echo '<pre>' . htmlspecialchars($url) . '</pre>' . PHP_EOL;
 			}
 			self::$urls[] = $url;
 		}
-		if (self::$settings['devlog']) {
+		if (self::$settings['devlog'] && !defined('LIBNAVITIA_CACHING')) {
 			if ($url) {
 				$data = array(
 					'url' => $url,
@@ -56,7 +56,7 @@ class tx_icslibnavitia_Debug {
 	private static $responseNum = 0;
 	
 	public static function WriteResponse($action, $xml) {
-		if (self::$settings['writeXML']) {
+		if (self::$settings['writeXML'] && !defined('LIBNAVITIA_CACHING')) {
 			t3lib_div::writeFileToTypo3tempDir(t3lib_div::getFileAbsFileName('typo3temp/libnavitia/' . sprintf('%s_%d_%s.xml', $_SERVER['REQUEST_TIME'], self::$responseNum++, $action)), $xml);
 		}
 	}

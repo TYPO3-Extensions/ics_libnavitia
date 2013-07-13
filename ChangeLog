@@ -1,3 +1,6 @@
+2013-06-27 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Change: All requested are cached. Previously not cached items are removed upon cache update.
+
 2013-06-24 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Added APIService::getCityList.
 	* Added APIService::getLineScheduleByStopArea.
