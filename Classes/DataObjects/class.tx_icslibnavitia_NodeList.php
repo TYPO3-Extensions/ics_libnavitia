@@ -109,4 +109,8 @@ class tx_icslibnavitia_NodeList implements tx_icslibnavitia_INodeList {
 	public function ToArray() {
 		return $this->values;
 	}
+	
+	public function Sort($callback) {
+		return usort($this->values, $callback);
+	}
 }

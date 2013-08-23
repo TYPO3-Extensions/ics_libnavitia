@@ -1,3 +1,9 @@
+2013-08-23 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Fix: Missing implementation of INodeList::Sort in HangList.
+
+2013-07-16 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: New sort method in INodeList implemented in child classes. Use a callback to sort using usort.
+
 2013-07-13 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Instantiated nodes are put in a repository by externalCode or idx.
 	* Feature: Recall node instance from repository in node getter when the node have a related idx or externalCode attribute.

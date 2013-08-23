@@ -69,4 +69,5 @@ class tx_icslibnavitia_HangList extends tx_icslibnavitia_Node implements tx_icsl
 	public function Clear() { $this->list->Clear(); }
 	public function AsReadOnly() { return $this->list->AsReadOnly(); }
 	public function ToArray() { return $this->list->ToArray(); }
+	public function Sort($callback) { return usort($this->values, $callback); }
 }

@@ -68,6 +68,14 @@ interface tx_icslibnavitia_INodeList {
 	 * Converts the list to a standard array.
 	 *
 	 * The returned array is a copy of the internal element list in the same order.
+	 * @return array Copy of the internal list as array.
 	 */
 	public function ToArray();
+	/**
+	 * Sorts the list using user defined function.
+	 *
+	 * @param callable Callback. see usort.
+	 * @return bool Success
+	 */
+	public function Sort($callback);
 }

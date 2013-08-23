@@ -65,4 +65,8 @@ class tx_icslibnavitia_ReadOnlyNodeList implements tx_icslibnavitia_INodeList {
 	public function ToArray() {
 		return $list->ToArray();
 	}
+
+	public function Sort($callback) {
+		throw new Exception('Unsupported operation.');
+	}
 }
