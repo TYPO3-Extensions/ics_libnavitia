@@ -1,3 +1,7 @@
+2014-01-21 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: Constant editor line selector control.
+	* Feature: Object generation cached in APIService::_getLineList.
+
 2013-08-23 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Fix: Missing implementation of INodeList::Sort in HangList.
 

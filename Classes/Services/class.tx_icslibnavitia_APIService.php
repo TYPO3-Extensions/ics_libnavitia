@@ -29,6 +29,10 @@ class tx_icslibnavitia_APIService {
 		'VPatternSetList',
 		'VPTranslator'
 	);
+	private $lastCacheTime = false;
+	private $lastCacheHash = false;
+	private $lastCachePersist = false;
+	private static $cacheInstance = null;
 
 	/**
 	 *
@@ -43,6 +47,21 @@ class tx_icslibnavitia_APIService {
 	
 	public static function checkCacheFolder() {
 		t3lib_div::mkdir_deep(PATH_site, tx_icslibnavitia_APIService::CACHE_DIR);
+	}
+	
+	protected static function initializeCaching() {
+		if (self::$cacheInstance) return;
+		t3lib_cache::initializeCachingFramework();
+		try {
+			self::$cacheInstance = $GLOBALS['typo3CacheManager']->getCache('cache_hash');
+		} catch (t3lib_cache_exception_NoSuchCache $e) {
+			self::$cacheInstance = $GLOBALS['typo3CacheFactory']->create(
+				'cache_hash',
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['frontend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['backend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['cache_hash']['options']
+			);
+		}
 	}
 	
 	/**
@@ -64,9 +83,15 @@ class tx_icslibnavitia_APIService {
 			);
 			$hash = md5(serialize($cacheRow));
 			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
+			$this->lastCacheHash = $hash;
 			if (file_exists($path)) {
 				$cached = t3lib_div::getURL($path, 0, false, $report);
+				$this->lastCacheTime = filemtime($path);
 			}
+			else {
+				$this->lastCacheTime = false;
+			}
+			$this->lastCachePersist = in_array($action, self::$cacheable);
 		}
 		$params['Interface'] = self::INTERFACE_VERSION;
 		if ($this->statId)
@@ -99,6 +124,7 @@ class tx_icslibnavitia_APIService {
 			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING')) {
 				self::checkCacheFolder();
 				t3lib_div::writeFileToTypo3tempDir($path, $result);
+				$this->lastCacheTime = filemtime($path);
 				if (!$GLOBALS['TYPO3_DB']->exec_SELECTcountRows(
 					'hash',
 					'tx_icslibnavitia_cachedrequests',
@@ -531,33 +557,49 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionLineList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Line');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'LineList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('Line' => 'tx_icslibnavitia_Line'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
+		$fromCache = null;
+		if ($this->lastCacheTime !== false) {
+			self::initializeCaching();
+			$cacheId = 'navapi' . $this->lastCacheHash;
+			if (self::$cacheInstance->has($cacheId)) {
+				$fromCache = self::$cacheInstance->get($cacheId);
+				if ($fromCache['time'] < $this->lastCacheTime) {
+					$fromCache = null;
 				}
 			}
-			$reader->read();
 		}
-		return $list;
+		if ($fromCache == null) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$this->XMLMoveToRootElement($reader, 'ActionLineList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
+			}
+			$reader->read();
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Line');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$this->SkipChildren($reader);
+							break;
+						case 'LineList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('Line' => 'tx_icslibnavitia_Line'));
+							break;
+						case 'PagerInfo':
+							$this->SkipChildren($reader);
+							break;
+						default:
+							$this->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+		}
+		if (($fromCache == null) && ($this->lastCacheTime !== false)) {
+			self::$cacheInstance->set($cacheId, array('time' => $this->lastCacheTime, 'data' => $list), array(), $this->lastCachePersist ? 0 : 3600);
+		}
+		return $fromCache ? $fromCache['data'] : $list;
 	}
 	
 	/**
