@@ -79,3 +79,7 @@ class tx_icslibnavitia_JourneyResult extends tx_icslibnavitia_Node {
 		return get_class($this);
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_JourneyResult.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_JourneyResult.php']);
+}

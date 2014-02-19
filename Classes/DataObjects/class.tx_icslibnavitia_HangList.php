@@ -71,3 +71,7 @@ class tx_icslibnavitia_HangList extends tx_icslibnavitia_Node implements tx_icsl
 	public function ToArray() { return $this->list->ToArray(); }
 	public function Sort($callback) { return usort($this->values, $callback); }
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_HangList.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_HangList.php']);
+}

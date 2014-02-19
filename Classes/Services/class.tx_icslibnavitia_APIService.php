@@ -64,6 +64,49 @@ class tx_icslibnavitia_APIService {
 		}
 	}
 	
+	protected static $wrapperObject = null;
+	protected static function generateCallbackWrapper() {
+		if (self::$wrapperObject == null) {
+			$wrapperClassname = uniqid('tx_icslibnavitia_APIServiceW_');
+			$childClassname = uniqid('tx_icslibnavitia_APIServiceC_');
+			eval("class ${wrapperClassname} {
+	protected \$obj;
+	public function __construct() { \$this->obj = new ${childClassname}(); }
+	public function XMLMoveToRootElement(XMLReader \$reader, \$name) { return \$this->obj->XMLMoveToRootElement_(\$reader, \$name); }
+	public function SkipChildren(XMLReader \$reader) { \$this->obj->SkipChildren_(\$reader); }
+}
+class ${childClassname} extends tx_icslibnavitia_APIService {
+	public function __construct() {}
+	public function XMLMoveToRootElement_(XMLReader \$reader, \$name) { return \$this->XMLMoveToRootElement(\$reader, \$name); }
+	public function SkipChildren_(XMLReader \$reader) { \$this->SkipChildren(\$reader); }
+}");
+			self::$wrapperObject = new $wrapperClassname();
+		}
+		return self::$wrapperObject;
+	}
+	
+	protected function getDataCached($generateCallback) {
+		$fromCache = null;
+		$result = null;
+		if ($this->lastCacheTime !== false) {
+			self::initializeCaching();
+			$cacheId = 'navapi' . $this->lastCacheHash;
+			if (self::$cacheInstance->has($cacheId)) {
+				$fromCache = self::$cacheInstance->get($cacheId);
+				if ($fromCache['time'] < $this->lastCacheTime) {
+					$fromCache = null;
+				}
+			}
+		}
+		if ($fromCache == null) {
+			$result = $generateCallback(self::generateCallbackWrapper());
+		}
+		if (($fromCache == null) && ($this->lastCacheTime !== false) && ($result != null)) {
+			self::$cacheInstance->set($cacheId, array('time' => $this->lastCacheTime, 'data' => $result), array(), $this->lastCachePersist ? 0 : 3600);
+		}
+		return $fromCache ? $fromCache['data'] : $result;
+	}
+	
 	/**
 	 * Does a RAW call to a NAViTiA API fonction.
 	 *
@@ -213,6 +256,21 @@ class tx_icslibnavitia_APIService {
 	 * @return tx_icslibnavitia_NodeList The list of results. Each element is a {@link tx_icslibnavitia_EntryPoint}.
 	 */
 	public function getEntryPointListByNameAndCity($name, $city = '', $quality = tx_icslibnavitia_APIService::ENTRYPOINTQUALITY_HIGH, $max = 0) {
+		return $this->getEntryPointListByNameAndCityAndType($name, $city, $quality, $max, 'All');
+	}
+
+	/**
+	 * Query the EntryPoint API function.
+	 *
+	 * @param string $name The element description to search for.
+	 *        Can be a stop point, an address, a place, a city.
+	 * @param string $city The city where to search. Optional.
+	 * @param integer $quality The results quality. One of the ENTRYPOINTQUALITY_* constants. Optional. Default to ENTRYPOINTQUALITY_HIGH.
+	 * @param integer $max The maximum number of results. Zero (0) for unlimited. Optional. Default to zero (0).
+	 * @param string $type The type of expected results. Optional. Default to All. Valid values are: All, StopArea, Address, Site, City.
+	 * @return tx_icslibnavitia_NodeList The list of results. Each element is a {@link tx_icslibnavitia_EntryPoint}.
+	 */
+	public function getEntryPointListByNameAndCityAndType($name, $city = '', $quality = tx_icslibnavitia_APIService::ENTRYPOINTQUALITY_HIGH, $max = 0, $type = 'All') {
 		if ($name == '') {
 			if ($city == '') {
 				tx_icslibnavitia_Debug::notice('Empty parameters for EntryPoint query');
@@ -223,8 +281,16 @@ class tx_icslibnavitia_APIService {
 				$city = '';
 			}
 		}
+		if ($type != 'All') {
+			foreach (explode(';', $type) as $t) {
+				if (!in_array($t, array('StopArea', 'Address', 'Site', 'City'))) {
+					tx_icslibnavitia_Debug::notice('Invalid type in type list.');
+					return false;
+				}
+			}
+		}
 		$params = array();
-		$params['Filter'] = 'All';
+		$params['Filter'] = $type;
 		$params['Name'] = $name;
 		if ($city != '')
 			$params['CityName'] = $city;
@@ -236,33 +302,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call EntryPoint API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionEntryPointList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from EntryPoint API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_EntryPoint');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'EntryPointList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('EntryPoint' => 'tx_icslibnavitia_EntryPoint'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionEntryPointList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from EntryPoint API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_EntryPoint');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'EntryPointList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('EntryPoint' => 'tx_icslibnavitia_EntryPoint'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/** PlanJourney kind: Compute the route to arrive as soon as possible. */
@@ -312,46 +380,48 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PlanJourney API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionJourneyResultList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PlanJourney API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$jrs = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_JourneyResult');
-		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
-		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
-		$result = array(
-			'JourneyResultList' => $jrs,
-			'CommentList' => $comments,
-			'ImpactList' => $impacts,
-		);
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'JourneyResultList':
-						tx_icslibnavitia_Node::ReadList($reader, $jrs, array('JourneyResult' => 'tx_icslibnavitia_JourneyResult'));
-						break;
-					case 'CommentList':
-						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
-						break;
-					case 'ImpactList':
-						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionJourneyResultList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PlanJourney API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $result;
+			$jrs = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_JourneyResult');
+			$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+			$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
+			$result = array(
+				'JourneyResultList' => $jrs,
+				'CommentList' => $comments,
+				'ImpactList' => $impacts,
+			);
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'JourneyResultList':
+							tx_icslibnavitia_Node::ReadList($reader, $jrs, array('JourneyResult' => 'tx_icslibnavitia_JourneyResult'));
+							break;
+						case 'CommentList':
+							tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+							break;
+						case 'ImpactList':
+							tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $result;
+		});
 	}
 	
 	/**
@@ -382,33 +452,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call StreetNetwork API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionStreetNetwork')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from StreetNetwork API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Segment');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'SegmentList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('Segment' => 'tx_icslibnavitia_Segment'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionStreetNetwork')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from StreetNetwork API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Segment');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'SegmentList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('Segment' => 'tx_icslibnavitia_Segment'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/**
@@ -458,33 +530,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionNetworkList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Network');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'NetworkList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('Network' => 'tx_icslibnavitia_Network'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionNetworkList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Network');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'NetworkList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('Network' => 'tx_icslibnavitia_Network'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/**
@@ -557,21 +631,10 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$fromCache = null;
-		if ($this->lastCacheTime !== false) {
-			self::initializeCaching();
-			$cacheId = 'navapi' . $this->lastCacheHash;
-			if (self::$cacheInstance->has($cacheId)) {
-				$fromCache = self::$cacheInstance->get($cacheId);
-				if ($fromCache['time'] < $this->lastCacheTime) {
-					$fromCache = null;
-				}
-			}
-		}
-		if ($fromCache == null) {
+		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
-			if (!$this->XMLMoveToRootElement($reader, 'ActionLineList')) {
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionLineList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
 				return null;
 			}
@@ -581,25 +644,22 @@ class tx_icslibnavitia_APIService {
 				if ($reader->nodeType == XMLReader::ELEMENT) {
 					switch ($reader->name) {
 						case 'Params':
-							$this->SkipChildren($reader);
+							$obj->SkipChildren($reader);
 							break;
 						case 'LineList':
 							tx_icslibnavitia_Node::ReadList($reader, $list, array('Line' => 'tx_icslibnavitia_Line'));
 							break;
 						case 'PagerInfo':
-							$this->SkipChildren($reader);
+							$obj->SkipChildren($reader);
 							break;
 						default:
-							$this->SkipChildren($reader);
+							$obj->SkipChildren($reader);
 					}
 				}
 				$reader->read();
 			}
-		}
-		if (($fromCache == null) && ($this->lastCacheTime !== false)) {
-			self::$cacheInstance->set($cacheId, array('time' => $this->lastCacheTime, 'data' => $list), array(), $this->lastCachePersist ? 0 : 3600);
-		}
-		return $fromCache ? $fromCache['data'] : $list;
+			return $list;
+		});
 	}
 	
 	/**
@@ -646,33 +706,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call RoutePointList API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionRoutePointList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from RoutePointList API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_RoutePoint');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'RoutePointList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('RoutePoint' => 'tx_icslibnavitia_RoutePoint'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionRoutePointList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from RoutePointList API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_RoutePoint');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'RoutePointList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('RoutePoint' => 'tx_icslibnavitia_RoutePoint'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 
 	/**
@@ -692,33 +754,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopAreaList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopAreaList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 
 	/**
@@ -738,33 +802,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionStopPointList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopPointList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopPointList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopPointList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/**
@@ -844,71 +910,73 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call DepartureBoard API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'DepartureBoardList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from DepartureBoard API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
-		$stopPoints = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
-		$lines = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Line');
-		$routes = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Route');
-		$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
-		$destinations = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
-		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
-		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
-		$result = array(
-			'StopList' => $stops,
-			'StopPointList' => $stopPoints,
-			'LineList' => $lines,
-			'RouteList' => $routes,
-			'VehicleJourneyList' => $journeys,
-			'DestinationList' => $destinations,
-			'CommentList' => $comments,
-			'ImpactList' => $impacts,
-		);
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopList':
-						tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
-						break;
-					case 'StopPointList':
-						tx_icslibnavitia_Node::ReadList($reader, $stopPoints, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
-						break;
-					case 'LineList':
-						tx_icslibnavitia_Node::ReadList($reader, $lines, array('Line' => 'tx_icslibnavitia_Line'));
-						break;
-					case 'RouteList':
-						tx_icslibnavitia_Node::ReadList($reader, $routes, array('Route' => 'tx_icslibnavitia_Route'));
-						break;
-					case 'VehicleJourneyList':
-						tx_icslibnavitia_Node::ReadList($reader, $journeys, array('VehicleJourney' => 'tx_icslibnavitia_VehicleJourney'));
-						break;
-					case 'DestinationList':
-						tx_icslibnavitia_Node::ReadList($reader, $destinations, array('StopArea' => 'tx_icslibnavitia_StopArea'));
-						break;
-					case 'CommentList':
-						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
-						break;
-					case 'ImpactList':
-						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'DepartureBoardList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from DepartureBoard API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $result;
+			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+			$stopPoints = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
+			$lines = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Line');
+			$routes = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Route');
+			$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
+			$destinations = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
+			$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+			$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
+			$result = array(
+				'StopList' => $stops,
+				'StopPointList' => $stopPoints,
+				'LineList' => $lines,
+				'RouteList' => $routes,
+				'VehicleJourneyList' => $journeys,
+				'DestinationList' => $destinations,
+				'CommentList' => $comments,
+				'ImpactList' => $impacts,
+			);
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopList':
+							tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
+							break;
+						case 'StopPointList':
+							tx_icslibnavitia_Node::ReadList($reader, $stopPoints, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
+							break;
+						case 'LineList':
+							tx_icslibnavitia_Node::ReadList($reader, $lines, array('Line' => 'tx_icslibnavitia_Line'));
+							break;
+						case 'RouteList':
+							tx_icslibnavitia_Node::ReadList($reader, $routes, array('Route' => 'tx_icslibnavitia_Route'));
+							break;
+						case 'VehicleJourneyList':
+							tx_icslibnavitia_Node::ReadList($reader, $journeys, array('VehicleJourney' => 'tx_icslibnavitia_VehicleJourney'));
+							break;
+						case 'DestinationList':
+							tx_icslibnavitia_Node::ReadList($reader, $destinations, array('StopArea' => 'tx_icslibnavitia_StopArea'));
+							break;
+						case 'CommentList':
+							tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+							break;
+						case 'ImpactList':
+							tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $result;
+		});
 	}
 	
 	/**
@@ -947,30 +1015,32 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionModeTypeList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_ModeType');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'ModeTypeList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('ModeType' => 'tx_icslibnavitia_ModeType'));
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionModeTypeList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_ModeType');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'ModeTypeList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('ModeType' => 'tx_icslibnavitia_ModeType'));
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 
 	/** Binary Criteria, Vehicle: Requires a vehicle with MIP access. */
@@ -1028,29 +1098,31 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call MakeBinaryCriteria API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'BinaryCriteria')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from MakeBinaryCriteria API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$values = array();
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-					case 'Mode':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$values[$reader->name] = $reader->readString();
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'BinaryCriteria')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from MakeBinaryCriteria API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $values;
+			$values = array();
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+						case 'Mode':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$values[$reader->name] = $reader->readString();
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $values;
+		});
 	}
 
 	/**
@@ -1080,33 +1152,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call NextDeparture API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionNextDepartureList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from NextDeparture API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'NextDepartureList':
-						tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionNextDepartureList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from NextDeparture API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $stops;
+			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'NextDepartureList':
+							tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $stops;
+		});
 	}
 	
 	/**
@@ -1137,30 +1211,32 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopAreaList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopAreaList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('StopArea' => 'tx_icslibnavitia_StopArea'));
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/**
@@ -1205,30 +1281,32 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call ProximityList API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionProximityList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from ProximityList API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Proximity');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'ProximityList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('Proximity' => 'tx_icslibnavitia_Proximity'));
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionProximityList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from ProximityList API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Proximity');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'ProximityList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('Proximity' => 'tx_icslibnavitia_Proximity'));
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 
 	/**
@@ -1246,38 +1324,40 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call EndOfCourse API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'EndOfCourseList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from EndOfCourse API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
-		$vj = null;
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('Stop' => 'tx_icslibnavitia_Stop'));
-						break;
-					case 'VehiculeJourney':
-						$vj = t3lib_div::makeInstance('tx_icslibnavitia_VehicleJourney');
-						$vj->ReadXML($reader);
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'EndOfCourseList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from EndOfCourse API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return array('stops' => $list, 'vehiculeJourney' => $vj);
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+			$vj = null;
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('Stop' => 'tx_icslibnavitia_Stop'));
+							break;
+						case 'VehiculeJourney':
+							$vj = t3lib_div::makeInstance('tx_icslibnavitia_VehicleJourney');
+							$vj->ReadXML($reader);
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return array('stops' => $list, 'vehiculeJourney' => $vj);
+		});
 	}
 	
 	/**
@@ -1327,33 +1407,35 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'ActionCityList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_City');
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'CityList':
-						tx_icslibnavitia_Node::ReadList($reader, $list, array('City' => 'tx_icslibnavitia_City'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'ActionCityList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $list;
+			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_City');
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'CityList':
+							tx_icslibnavitia_Node::ReadList($reader, $list, array('City' => 'tx_icslibnavitia_City'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $list;
+		});
 	}
 	
 	/**
@@ -1385,60 +1467,62 @@ class tx_icslibnavitia_APIService {
 			tx_icslibnavitia_Debug::warning('Failed to call LineSchedule API; See devlog for additional information');
 			return null;
 		}
-		$reader = new XMLReader();
-		$reader->XML($xml);
-		if (!$this->XMLMoveToRootElement($reader, 'LineScheduleList')) {
-			tx_icslibnavitia_Debug::warning('Invalid response from LineSchedule API; See saved response for additional information');
-			return null;
-		}
-		$reader->read();
-		$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
-		$stopPoints = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
-		$routes = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Route');
-		$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
-		$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
-		$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
-		$result = array(
-			'StopList' => $stops,
-			'StopPointList' => $stopPoints,
-			'RouteList' => $routes,
-			'VehicleJourneyList' => $journeys,
-			'CommentList' => $comments,
-			'ImpactList' => $impacts,
-		);
-		while ($reader->nodeType != XMLReader::END_ELEMENT) {
-			if ($reader->nodeType == XMLReader::ELEMENT) {
-				switch ($reader->name) {
-					case 'Params':
-						$this->SkipChildren($reader);
-						break;
-					case 'StopList':
-						tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
-						break;
-					case 'StopPointList':
-						tx_icslibnavitia_Node::ReadList($reader, $stopPoints, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
-						break;
-					case 'RouteList':
-						tx_icslibnavitia_Node::ReadList($reader, $routes, array('Route' => 'tx_icslibnavitia_Route'));
-						break;
-					case 'VehicleJourneyList':
-						tx_icslibnavitia_Node::ReadList($reader, $journeys, array('VehicleJourney' => 'tx_icslibnavitia_VehicleJourney'));
-						break;
-					case 'CommentList':
-						tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
-						break;
-					case 'ImpactList':
-						tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
-						break;
-					case 'PagerInfo':
-						$this->SkipChildren($reader);
-						break;
-					default:
-						$this->SkipChildren($reader);
-				}
+		return $this->getDataCached(function($obj) use($xml) {
+			$reader = new XMLReader();
+			$reader->XML($xml);
+			if (!$obj->XMLMoveToRootElement($reader, 'LineScheduleList')) {
+				tx_icslibnavitia_Debug::warning('Invalid response from LineSchedule API; See saved response for additional information');
+				return null;
 			}
 			$reader->read();
-		}
-		return $result;
+			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
+			$stopPoints = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
+			$routes = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Route');
+			$journeys = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_VehicleJourney');
+			$comments = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Comment');
+			$impacts = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Impact');
+			$result = array(
+				'StopList' => $stops,
+				'StopPointList' => $stopPoints,
+				'RouteList' => $routes,
+				'VehicleJourneyList' => $journeys,
+				'CommentList' => $comments,
+				'ImpactList' => $impacts,
+			);
+			while ($reader->nodeType != XMLReader::END_ELEMENT) {
+				if ($reader->nodeType == XMLReader::ELEMENT) {
+					switch ($reader->name) {
+						case 'Params':
+							$obj->SkipChildren($reader);
+							break;
+						case 'StopList':
+							tx_icslibnavitia_Node::ReadList($reader, $stops, array('Stop' => 'tx_icslibnavitia_Stop'));
+							break;
+						case 'StopPointList':
+							tx_icslibnavitia_Node::ReadList($reader, $stopPoints, array('StopPoint' => 'tx_icslibnavitia_StopPoint'));
+							break;
+						case 'RouteList':
+							tx_icslibnavitia_Node::ReadList($reader, $routes, array('Route' => 'tx_icslibnavitia_Route'));
+							break;
+						case 'VehicleJourneyList':
+							tx_icslibnavitia_Node::ReadList($reader, $journeys, array('VehicleJourney' => 'tx_icslibnavitia_VehicleJourney'));
+							break;
+						case 'CommentList':
+							tx_icslibnavitia_Node::ReadList($reader, $comments, array('Comment' => 'tx_icslibnavitia_Comment'));
+							break;
+						case 'ImpactList':
+							tx_icslibnavitia_Node::ReadList($reader, $impacts, array('Impact' => 'tx_icslibnavitia_Impact'));
+							break;
+						case 'PagerInfo':
+							$obj->SkipChildren($reader);
+							break;
+						default:
+							$obj->SkipChildren($reader);
+					}
+				}
+				$reader->read();
+			}
+			return $result;
+		});
 	}
 }

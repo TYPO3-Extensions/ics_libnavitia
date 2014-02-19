@@ -70,3 +70,7 @@ class tx_icslibnavitia_ReadOnlyNodeList implements tx_icslibnavitia_INodeList {
 		throw new Exception('Unsupported operation.');
 	}
 }
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_ReadOnlyNodeList.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/ics_libnavitia/class.tx_icslibnavitia_ReadOnlyNodeList.php']);
+}

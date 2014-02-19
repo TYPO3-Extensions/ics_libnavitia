@@ -1,3 +1,8 @@
+2014-02-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: Object level caching in API Service.
+	* Feature: Enabled XCLASS for object classes.
+	* Feature: Alternate getEntryPointListByNameAndCityAndType in API Service.
+
 2014-01-21 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Constant editor line selector control.
 	* Feature: Object generation cached in APIService::_getLineList.
