@@ -116,6 +116,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 */
 	public function CallAPI($action, array $params) {
 		$cached = null;
+		$this->lastCacheTime = $this->lastCacheHash = $this->lastCachePersist = false;
 		if (!defined('LIBNAVITIA_CACHING')) {
 			$cacheRow = array(
 				$this->serviceUrl,
@@ -140,9 +141,12 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		if ($this->statId)
 			$params['login'] = $this->statId;
 		$this->lastParams = $params;
-		self::$convObj->convArray($params, $GLOBALS['TSFE'] ? $GLOBALS['TSFE']->renderCharset : $GLOBALS['LANG']->charSet, self::$convObj->parse_charset('ISO-8859-1'));
-		$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
+		$ics = $GLOBALS['TSFE'] ? $GLOBALS['TSFE']->renderCharset : $GLOBALS['LANG']->charSet;
+		$ocs = self::$convObj->parse_charset('ISO-8859-1');
+		$convObj = self::$convObj;
+		$params = array_map(function($v) use($convObj, $ics, $ocs) { return $convObj->conv($v, $ics, $ocs); }, $params);
 		if (!defined('LIBNAVITIA_CACHING')) {
+			$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
 			$this->lastParams['RequestUrl'] = t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
 		}
 		$this->lastParams['Function'] = 'API';

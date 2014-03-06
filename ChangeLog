@@ -1,3 +1,6 @@
+2014-02-20 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Bug fix: On second pass, ServiceAPI::CallAPI, convArray did not work well. Rewriten for individual calls.
+
 2014-02-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Object level caching in API Service.
 	* Feature: Enabled XCLASS for object classes.
