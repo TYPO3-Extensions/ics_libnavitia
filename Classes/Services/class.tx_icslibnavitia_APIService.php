@@ -8,7 +8,7 @@
  * @subpackage Services
  */
 class tx_icslibnavitia_APIService {
-	private static $convObj = null;
+	private static $convObj = NULL;
 	const INTERFACE_VERSION = '1_16';
 	const CACHE_DIR = 'typo3temp/libnavitia/cache/';
 	private $serviceUrl;
@@ -29,17 +29,17 @@ class tx_icslibnavitia_APIService {
 		'VPatternSetList',
 		'VPTranslator'
 	);
-	private $lastCacheTime = false;
-	private $lastCacheHash = false;
-	private $lastCachePersist = false;
-	private static $cacheInstance = null;
+	private $lastCacheTime = FALSE;
+	private $lastCacheHash = FALSE;
+	private $lastCachePersist = FALSE;
+	private static $cacheInstance = NULL;
 
 	/**
 	 *
 	 * @param string $url URL of the gwnavitia.dll to use.
 	 */
 	public function __construct($url, $login) {
-		if (self::$convObj == null)
+		if (self::$convObj == NULL)
 			self::$convObj = t3lib_div::makeInstance('t3lib_cs');
 		$this->serviceUrl = $url;
 		$this->statId = $login;
@@ -64,9 +64,9 @@ class tx_icslibnavitia_APIService {
 		}
 	}
 	
-	protected static $wrapperObject = null;
+	protected static $wrapperObject = NULL;
 	protected static function generateCallbackWrapper() {
-		if (self::$wrapperObject == null) {
+		if (self::$wrapperObject == NULL) {
 			$wrapperClassname = uniqid('tx_icslibnavitia_APIServiceW_');
 			$childClassname = uniqid('tx_icslibnavitia_APIServiceC_');
 			eval("class ${wrapperClassname} {
@@ -86,22 +86,22 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	}
 	
 	protected function getDataCached($generateCallback) {
-		$fromCache = null;
-		$result = null;
-		if ($this->lastCacheTime !== false) {
+		$fromCache = NULL;
+		$result = NULL;
+		if ($this->lastCacheTime !== FALSE) {
 			self::initializeCaching();
 			$cacheId = 'navapi' . $this->lastCacheHash;
 			if (self::$cacheInstance->has($cacheId)) {
 				$fromCache = self::$cacheInstance->get($cacheId);
 				if ($fromCache['time'] < $this->lastCacheTime) {
-					$fromCache = null;
+					$fromCache = NULL;
 				}
 			}
 		}
-		if ($fromCache == null) {
+		if ($fromCache == NULL) {
 			$result = $generateCallback(self::generateCallbackWrapper());
 		}
-		if (($fromCache == null) && ($this->lastCacheTime !== false) && ($result != null)) {
+		if (($fromCache == NULL) && ($this->lastCacheTime !== FALSE) && ($result != NULL)) {
 			self::$cacheInstance->set($cacheId, array('time' => $this->lastCacheTime, 'data' => $result), array(), $this->lastCachePersist ? 0 : 3600);
 		}
 		return $fromCache ? $fromCache['data'] : $result;
@@ -112,12 +112,13 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *
 	 * @param string $action The API function to call.
 	 * @param array $params The parameters to pass to the function.
+	 * @param boolean $forceNoCache Explicitly disable caching for exceptional cases.
 	 * @return mixed The response data or FALSE if failed.
 	 */
-	public function CallAPI($action, array $params) {
-		$cached = null;
-		$this->lastCacheTime = $this->lastCacheHash = $this->lastCachePersist = false;
-		if (!defined('LIBNAVITIA_CACHING')) {
+	public function CallAPI($action, array $params, $forceNoCache = FALSE) {
+		$cached = NULL;
+		$this->lastCacheTime = $this->lastCacheHash = $this->lastCachePersist = FALSE;
+		if (!defined('LIBNAVITIA_CACHING') && !$forceNoCache) {
 			$cacheRow = array(
 				$this->serviceUrl,
 				$this->statId,
@@ -129,11 +130,11 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
 			$this->lastCacheHash = $hash;
 			if (file_exists($path)) {
-				$cached = t3lib_div::getURL($path, 0, false, $report);
+				$cached = t3lib_div::getURL($path, 0, FALSE, $report);
 				$this->lastCacheTime = filemtime($path);
 			}
 			else {
-				$this->lastCacheTime = false;
+				$this->lastCacheTime = FALSE;
 			}
 			$this->lastCachePersist = in_array($action, self::$cacheable);
 		}
@@ -152,9 +153,9 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$this->lastParams['Function'] = 'API';
 		$this->lastParams['Action'] = $action;
 		$url = $this->serviceUrl . '/API?Action=' . urlencode($action) . t3lib_div::implodeArrayForUrl('', $params);
-		if ($cached === null) {
+		if ($cached === NULL) {
 			$report = array();
-			$result = t3lib_div::getURL($url, 0, false, $report);
+			$result = t3lib_div::getURL($url, 0, FALSE, $report);
 		}
 		else {
 			$result = $cached;
@@ -168,7 +169,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		tx_icslibnavitia_Debug::Log('Call to NAViTiA API', $url, $result ? 0 : 1, $report);
 		if ($result) {
 			tx_icslibnavitia_Debug::WriteResponse($action, $result);
-			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING')) {
+			if (($cached === NULL) && !defined('LIBNAVITIA_CACHING') && !$forceNoCache) {
 				self::checkCacheFolder();
 				t3lib_div::writeFileToTypo3tempDir($path, $result);
 				$this->lastCacheTime = filemtime($path);
@@ -278,7 +279,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		if ($name == '') {
 			if ($city == '') {
 				tx_icslibnavitia_Debug::notice('Empty parameters for EntryPoint query');
-				return false;
+				return FALSE;
 			}
 			else {
 				$name = $city;
@@ -289,7 +290,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 			foreach (explode(';', $type) as $t) {
 				if (!in_array($t, array('StopArea', 'Address', 'Site', 'City'))) {
 					tx_icslibnavitia_Debug::notice('Invalid type in type list.');
-					return false;
+					return FALSE;
 				}
 			}
 		}
@@ -304,14 +305,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('EntryPoint', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call EntryPoint API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionEntryPointList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from EntryPoint API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_EntryPoint');
@@ -360,12 +361,12 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Comments are in the {@link tx_icslibnavitia_NodeList} in <code>CommentList</code> key. Not yet defined.
 	 */
 	public function getPlanJourney(tx_icslibnavitia_EntryPointDefinition $from, tx_icslibnavitia_EntryPointDefinition $to,
-		$isStartTime = true, DateTime $when = null, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0, $binaryCriteria = null) {
+		$isStartTime = TRUE, DateTime $when = NULL, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0, $binaryCriteria = NULL) {
 		$params = array();
 		$params['Departure'] = (string)$from;
 		$params['Arrival'] = (string)$to;
 		$params['Sens'] = $isStartTime ? 1 : -1;
-		if ($when == null) {
+		if ($when == NULL) {
 			$when = new DateTime();
 			$when->setTime(0, 0, 0);
 		}
@@ -382,14 +383,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('PlanJourney', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PlanJourney API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionJourneyResultList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PlanJourney API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$jrs = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_JourneyResult');
@@ -438,30 +439,30 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param integer $hangDistanceEnd The maximum distance used to hang to a road from the end point, in meters. Optional. Default to {@link $hangDistanceStart}.
 	 * @return tx_icslibnavitia_NodeList The list of segments composing the walk path. In no specific order. Each element is a {@link tx_icslibnavitia_Segment}.
 	 */
-	public function getStreetNetwork(tx_icslibnavitia_Coord $start, tx_icslibnavitia_Coord $end, $walkSpeed = 50, $hangDistanceStart = null, $hangDistanceEnd = null) {
+	public function getStreetNetwork(tx_icslibnavitia_Coord $start, tx_icslibnavitia_Coord $end, $walkSpeed = 50, $hangDistanceStart = NULL, $hangDistanceEnd = NULL) {
 		$params = array();
 		$params['StartCoordX'] = str_replace('.', ',', $start->x);
 		$params['StartCoordY'] = str_replace('.', ',', $start->y);
 		$params['EndCoordX'] = str_replace('.', ',', $end->x);
 		$params['EndCoordY'] = str_replace('.', ',', $end->y);
 		$params['WalkSpeed'] = $walkSpeed;
-		if ($hangDistanceStart == null)
+		if ($hangDistanceStart == NULL)
 			$hangDistanceStart = 1000;
-		if ($hangDistanceEnd == null)
+		if ($hangDistanceEnd == NULL)
 			$hangDistanceEnd = $hangDistanceStart;
 		$params['HangDistanceDep'] = $hangDistanceStart;
 		$params['HangDistanceArr'] = $hangDistanceEnd;
 		$xml = $this->CallAPI('StreetNetwork', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call StreetNetwork API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionStreetNetwork')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from StreetNetwork API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Segment');
@@ -504,7 +505,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 */
 	public function getNetworkByCode($networkExternalCode) {
 		$list = $this->_getNetworkList($networkExternalCode);
-		return ($list->Count() == 0) ? null : $list->Get(0);
+		return ($list->Count() == 0) ? NULL : $list->Get(0);
 	}
 	
 	/**
@@ -524,22 +525,22 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param string $networkExternalCode The unique identifier of the network. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of available networks. Each element is a {@link tx_icslibnavitia_Network}.
 	 */
-	private function _getNetworkList($networkExternalCode = null) {
+	private function _getNetworkList($networkExternalCode = NULL) {
 		$params = array();
 		$params['RequestedType'] = 'NetworkList';
-		if ($networkExternalCode !== null)
+		if ($networkExternalCode !== NULL)
 			$params['NetworkExternalCode'] = $networkExternalCode;
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionNetworkList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Network');
@@ -571,7 +572,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of available lines. Each element is a {@link tx_icslibnavitia_Line}.
 	 */
-	public function getLineList(tx_icslibnavitia_INodeList $networks = null) {
+	public function getLineList(tx_icslibnavitia_INodeList $networks = NULL) {
 		return $this->_getLineList($networks);
 	}
 	
@@ -582,8 +583,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @return tx_icslibnavitia_Line The requested line or null if not found.
 	 */
 	public function getLineByCode($lineExternalCode) {
-		$list = $this->_getLineList(null, $lineExternalCode);
-		return ($list->Count() == 0) ? null : $list->Get(0);
+		$list = $this->_getLineList(NULL, $lineExternalCode);
+		return ($list->Count() == 0) ? NULL : $list->Get(0);
 	}
 	
 	/**
@@ -593,8 +594,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of matching lines. Each element is a {@link tx_icslibnavitia_Line}.
 	 */
-	public function getLineListByStopAreaCode($stopAreaExternalCode, tx_icslibnavitia_INodeList $networks = null) {
-		return $this->_getLineList($networks, null, array('StopArea' => array($stopAreaExternalCode)));
+	public function getLineListByStopAreaCode($stopAreaExternalCode, tx_icslibnavitia_INodeList $networks = NULL) {
+		return $this->_getLineList($networks, NULL, array('StopArea' => array($stopAreaExternalCode)));
 	}
 	
 	/**
@@ -606,10 +607,10 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Each filter is an array of externalCodes.
 	 * @return tx_icslibnavitia_INodeList The list of available lines. Each element is a {@link tx_icslibnavitia_Line}.
 	 */
-	private function _getLineList(tx_icslibnavitia_INodeList $networks = null, $lineExternalCode = null, array $filters = array()) {
+	private function _getLineList(tx_icslibnavitia_INodeList $networks = NULL, $lineExternalCode = NULL, array $filters = array()) {
 		$params = array();
 		$params['RequestedType'] = 'LineList';
-		if ($networks != null) {
+		if ($networks != NULL) {
 			$networkCodes = array();
 			foreach ($networks->ToArray() as $network) {
 				if ($network instanceof tx_icslibnavitia_Network) {
@@ -622,7 +623,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 				$params['NetworkExternalCode'] = implode(';', $networkCodes);
 			}
 		}
-		if ($lineExternalCode !== null) {
+		if ($lineExternalCode !== NULL) {
 			$params['LineExternalCode'] = $lineExternalCode;
 		}
 		else if (!empty($filters)) {
@@ -633,14 +634,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionLineList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Line');
@@ -673,8 +674,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
 	 * @return tx_icslibnavitia_INodeList The list of available route points. Each element is a {@link tx_icslibnavitia_RoutePoint}.
 	 */
-	public function getRoutePointList($lineExternalCode, $forward = true) {
-		return $this->_getRoutePointList(null, $lineExternalCode, $forward);
+	public function getRoutePointList($lineExternalCode, $forward = TRUE) {
+		return $this->_getRoutePointList(NULL, $lineExternalCode, $forward);
 	}
 	
 	/**
@@ -685,7 +686,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 */
 	public function getRoutePointByCode($routePointExternalCode) {
 		$list = $this->_getRoutePointList($routePointExternalCode);
-		return ($list->Count() == 0) ? null : $list->Get(0);
+		return ($list->Count() == 0) ? NULL : $list->Get(0);
 	}
 	
 	/**
@@ -696,9 +697,9 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param boolean $forward Indicates if the direction is forward. Otherwise backward. Optional. Default to forward (true).
 	 * @return tx_icslibnavitia_INodeList The list of available route points. Each element is a {@link tx_icslibnavitia_RoutePoint}.
 	 */
-	private function _getRoutePointList($routePointExternalCode = null, $lineExternalCode = null, $forward = true) {
+	private function _getRoutePointList($routePointExternalCode = NULL, $lineExternalCode = NULL, $forward = TRUE) {
 		$params = array();
-		if ($routePointExternalCode !== null) {
+		if ($routePointExternalCode !== NULL) {
 			$params['RoutePointExternalCode'] = $routePointExternalCode;
 		}
 		else {
@@ -708,14 +709,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('RoutePointList', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call RoutePointList API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionRoutePointList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from RoutePointList API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_RoutePoint');
@@ -750,20 +751,20 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	public function getStopAreasByLineCode($lineExternalCode) {
 		$params = array();
 		$params['RequestedType'] = 'StopAreaList';
-		if ($lineExternalCode !== null) {
+		if ($lineExternalCode !== NULL) {
 			$params['LineExternalCode'] = $lineExternalCode;
 		}
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
@@ -798,20 +799,20 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	public function getStopPointsByLineCode($lineExternalCode) {
 		$params = array();
 		$params['RequestedType'] = 'StopPointList';
-		if ($lineExternalCode !== null) {
+		if ($lineExternalCode !== NULL) {
 			$params['LineExternalCode'] = $lineExternalCode;
 		}
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopPointList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopPoint');
@@ -854,8 +855,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
 	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
 	 */
-	public function getDepartureBoardByStopPointForLine($stopPointExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
-		return $this->_getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, false, $lineExternalCode, $when, $forward, $startDayAt);
+	public function getDepartureBoardByStopPointForLine($stopPointExternalCode, $lineExternalCode, DateTime $when = NULL, $forward = TRUE, $startDayAt = 0) {
+		return $this->_getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, FALSE, $lineExternalCode, $when, $forward, $startDayAt);
 	}
 	
 	/**
@@ -875,8 +876,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
 	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
 	 */
-	public function getDepartureBoardByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
-		return $this->_getDepartureBoardByStopPointOrAreaForLine(false, $stopAreaExternalCode, $lineExternalCode, $when, $forward, $startDayAt);
+	public function getDepartureBoardByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, DateTime $when = NULL, $forward = TRUE, $startDayAt = 0) {
+		return $this->_getDepartureBoardByStopPointOrAreaForLine(FALSE, $stopAreaExternalCode, $lineExternalCode, $when, $forward, $startDayAt);
 	}
 	
 	/**
@@ -897,13 +898,13 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
 	 *        Destinations are in the {@link tx_icslibnavitia_NodeList} in <code>DestinationList</code> key. Each element is a {@link tx_icslibnavitia_StopArea}.
 	 */
-	private function _getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, $stopAreaExternalCode, $lineExternalCode, DateTime $when = null, $forward = true, $startDayAt = 0) {
+	private function _getDepartureBoardByStopPointOrAreaForLine($stopPointExternalCode, $stopAreaExternalCode, $lineExternalCode, DateTime $when = NULL, $forward = TRUE, $startDayAt = 0) {
 		$params = array();
 		if ($stopPointExternalCode) $params['StopPointExternalCode'] = $stopPointExternalCode;
 		if ($stopAreaExternalCode)$params['StopAreaExternalCode'] = $stopAreaExternalCode;
 		$params['LineExternalCode'] = $lineExternalCode;
 		$params['Sens'] = $forward ? 1 : -1;
-		if ($when == null)
+		if ($when == NULL)
 			$when = new DateTime();
 		$params['Date'] = $when->format('Y|m|d');
 		$startDayAt %= 1440; // 1440 minutes = 24 hours.
@@ -912,14 +913,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('DepartureBoard', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call DepartureBoard API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'DepartureBoardList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from DepartureBoard API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
@@ -1009,22 +1010,22 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param string $modeTypeExternalCode The identifier of the modeType. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of available mode types. Each element is a {@link tx_icslibnavitia_ModeType}.
 	 */
-	private function _getModeTypeList($modeTypeExternalCode = null) {
+	private function _getModeTypeList($modeTypeExternalCode = NULL) {
 		$params = array();
 		$params['RequestedType'] = 'ModeTypeList';
-		if ($modeTypeExternalCode !== null)
+		if ($modeTypeExternalCode !== NULL)
 			$params['ModeTypeExternalCode'] = $modeTypeExternalCode;
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionModeTypeList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_ModeType');
@@ -1082,8 +1083,8 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @return array The array with criteria values: Vehicle, StopPointEquipment, ModeType.
 	 */
 	public function getBinaryCriteria(array $modeTypeExternalCodes, array $flags = array()) {
-		static $availableFlags = null;
-		if ($availableFlags == null) {
+		static $availableFlags = NULL;
+		if ($availableFlags == NULL) {
 			$reflection = new ReflectionClass(get_class($this));
 			$availableFlags = $reflection->getConstants();
 			foreach (array_keys($availableFlags) as $key) {
@@ -1100,14 +1101,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('MakeBinaryCriteria', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call MakeBinaryCriteria API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'BinaryCriteria')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from MakeBinaryCriteria API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$values = array();
@@ -1141,7 +1142,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param boolean $noNextDay Indicates if the results don't span over the next service day.
 	 * @return tx_icslibnavitia_INodeList The list of next stops by chronological order. Each element is a {@link tx_icslibnavitia_Stop}.
 	 */
-	public function getNextDepartureByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, $forward = true, $count = 5, $startDayAt = 0, $noNextDay = true) {
+	public function getNextDepartureByStopAreaForLine($stopAreaExternalCode, $lineExternalCode, $forward = TRUE, $count = 5, $startDayAt = 0, $noNextDay = TRUE) {
 		$params = array();
 		$params['StopAreaExternalCode'] = $stopAreaExternalCode;
 		$params['LineExternalCode'] = $lineExternalCode;
@@ -1154,14 +1155,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('NextDeparture', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call NextDeparture API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionNextDepartureList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from NextDeparture API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
@@ -1196,7 +1197,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	public function getStopAreaByCode($stopAreaExternalCode) {
 		$list = $this->_getStopAreaList(array($stopAreaExternalCode));
 		if ($list->Count() > 0) return $list->Get(0);
-		return null;
+		return NULL;
 	}
 	
 	/**
@@ -1213,14 +1214,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionStopAreaList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_StopArea');
@@ -1254,7 +1255,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @return tx_icslibnavitia_INodeList The list of nearest stop area. Each element is a {@link tx_icslibnavitia_Proximity}.
 	 *         stopArea and distance in each elements are defined.
 	 */
-	public function getStopAreaProximityList(tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = true) {
+	public function getStopAreaProximityList(tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = TRUE) {
 		return $this->_getProximityList('StopArea', $coordinates, $distance, $min, $max, $circle);
 	}
 	
@@ -1269,7 +1270,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param boolean $circle Force to maximum distance to be checked using a circle instead of a square.
 	 * @return tx_icslibnavitia_INodeList The list of nearest stop area, site, or stop point. Each element is a {@link tx_icslibnavitia_Proximity}.
 	 */
-	private function _getProximityList($type, tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = true) {
+	private function _getProximityList($type, tx_icslibnavitia_Coord $coordinates, $distance = 1000, $min = 0, $max = 100, $circle = TRUE) {
 		$params = array();
 		if (!in_array($type, array('Site', 'StopPoint', 'StopArea', 'MainStopArea')))
 			$type = 'StopPoint';
@@ -1283,14 +1284,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('ProximityList', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call ProximityList API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionProximityList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from ProximityList API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Proximity');
@@ -1326,18 +1327,18 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('EndOfCourse', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call EndOfCourse API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'EndOfCourseList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from EndOfCourse API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');
-			$vj = null;
+			$vj = NULL;
 			while ($reader->nodeType != XMLReader::END_ELEMENT) {
 				if ($reader->nodeType == XMLReader::ELEMENT) {
 					switch ($reader->name) {
@@ -1370,7 +1371,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param tx_icslibnavitia_INodeList $networks Networks used to filter the query. List element are instance of {@tx_icslibnavitia_Network}. Optional.
 	 * @return tx_icslibnavitia_INodeList The list of available cities. Each element is a {@link tx_icslibnavitia_City}.
 	 */
-	public function getCityList(tx_icslibnavitia_INodeList $networks = null) {
+	public function getCityList(tx_icslibnavitia_INodeList $networks = NULL) {
 		return $this->_getCityList($networks);
 	}
 	
@@ -1382,10 +1383,10 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Each filter is an array of externalCodes.
 	 * @return tx_icslibnavitia_INodeList The list of available cities. Each element is a {@link tx_icslibnavitia_City}.
 	 */
-	private function _getCityList(tx_icslibnavitia_INodeList $networks = null, array $filters = array()) {
+	private function _getCityList(tx_icslibnavitia_INodeList $networks = NULL, array $filters = array()) {
 		$params = array();
 		$params['RequestedType'] = 'CityList';
-		if ($networks != null) {
+		if ($networks != NULL) {
 			$networkCodes = array();
 			foreach ($networks->ToArray() as $network) {
 				if ($network instanceof tx_icslibnavitia_Network) {
@@ -1398,7 +1399,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 				$params['NetworkExternalCode'] = implode(';', $networkCodes);
 			}
 		}
-		if ($lineExternalCode !== null) {
+		if ($lineExternalCode !== NULL) {
 			$params['LineExternalCode'] = $lineExternalCode;
 		}
 		else if (!empty($filters)) {
@@ -1409,14 +1410,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('PTReferential', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call PTReferential API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'ActionCityList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from PTReferential API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$list = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_City');
@@ -1456,11 +1457,11 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 *        Routes are in the {@link tx_icslibnavitia_NodeList} in <code>RouteList</code> key. Each element is a {@link tx_icslibnavitia_Route};
 	 *        Vehicle journeys are in the {@link tx_icslibnavitia_NodeList} in <code>VehicleJourneyList</code> key. Each element is a {@link tx_icslibnavitia_VehicleJourney};
 	 */
-	public function getLineScheduleByStopArea($departureStopAreaExternalCode, $arrivalStopAreaExternalCode, DateTime $when = null, $startDayAt = 0) {
+	public function getLineScheduleByStopArea($departureStopAreaExternalCode, $arrivalStopAreaExternalCode, DateTime $when = NULL, $startDayAt = 0) {
 		$params = array();
 		$params['DepartureExternalCode'] = $departureStopAreaExternalCode;
 		$params['ArrivalExternalCode'] = $arrivalStopAreaExternalCode;
-		if ($when == null)
+		if ($when == NULL)
 			$when = new DateTime();
 		$params['Date'] = $when->format('Y|m|d');
 		$startDayAt %= 1440; // 1440 minutes = 24 hours.
@@ -1469,14 +1470,14 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$xml = $this->CallAPI('LineSchedule', $params);
 		if (!$xml) {
 			tx_icslibnavitia_Debug::warning('Failed to call LineSchedule API; See devlog for additional information');
-			return null;
+			return NULL;
 		}
 		return $this->getDataCached(function($obj) use($xml) {
 			$reader = new XMLReader();
 			$reader->XML($xml);
 			if (!$obj->XMLMoveToRootElement($reader, 'LineScheduleList')) {
 				tx_icslibnavitia_Debug::warning('Invalid response from LineSchedule API; See saved response for additional information');
-				return null;
+				return NULL;
 			}
 			$reader->read();
 			$stops = t3lib_div::makeInstance('tx_icslibnavitia_NodeList', 'tx_icslibnavitia_Stop');

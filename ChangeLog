@@ -1,3 +1,6 @@
+2014-03-12 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: Added a parameter to ServiceAPI::CallAPI can bypass caching completly.
+
 2014-02-20 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Bug fix: On second pass, ServiceAPI::CallAPI, convArray did not work well. Rewriten for individual calls.
 
