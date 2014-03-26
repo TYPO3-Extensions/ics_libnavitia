@@ -146,16 +146,15 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 		$ocs = self::$convObj->parse_charset('ISO-8859-1');
 		$convObj = self::$convObj;
 		$params = array_map(function($v) use($convObj, $ics, $ocs) { return $convObj->conv($v, $ics, $ocs); }, $params);
-		if (!defined('LIBNAVITIA_CACHING')) {
-			$params['RequestUrl'] = str_replace('&', '%26', t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
-			$this->lastParams['RequestUrl'] = t3lib_div::getIndpEnv('TYPO3_REQUEST_URL');
-		}
 		$this->lastParams['Function'] = 'API';
 		$this->lastParams['Action'] = $action;
 		$url = $this->serviceUrl . '/API?Action=' . urlencode($action) . t3lib_div::implodeArrayForUrl('', $params);
 		if ($cached === NULL) {
 			$report = array();
 			$result = t3lib_div::getURL($url, 0, FALSE, $report);
+			if (is_string($result) && !defined('LIBNAVITIA_CACHING')) {
+				$result .= '<!-- ' .  t3lib_div::getIndpEnv('TYPO3_REQUEST_URL') . ' -->';
+			}
 		}
 		else {
 			$result = $cached;

@@ -1,3 +1,6 @@
+2014-03-26 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Fix: NAViTiA Url size limit workaround. RequestURL in API url can cause calls to fail.
+
 2014-03-12 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Added a parameter to ServiceAPI::CallAPI can bypass caching completly.
 
