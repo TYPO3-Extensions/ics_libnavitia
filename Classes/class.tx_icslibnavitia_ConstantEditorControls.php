@@ -25,6 +25,7 @@ class tx_icslibnavitia_ConstantEditorControls {
 		}
 		return $this->displayOptions($fieldName, $aname, $values, $selected, $size);
 	}
+
 	/**
 	 * Create a select control with the ModeType list queried for NAViTiA.
 	 * Additional parameters in constant definition:
@@ -49,6 +50,7 @@ class tx_icslibnavitia_ConstantEditorControls {
 		}
 		return $this->displayOptions($fieldName, $aname, $values, $selected, $size);
 	}
+
 	/**
 	 * Create a select control with the Line list queried for NAViTiA.
 	 * Additional parameters in constant definition:
