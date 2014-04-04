@@ -1,6 +1,7 @@
 2014-04-04 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Added APIService::getPlanJourney manageDisrupt parameter.
 	* Feature: Added LineSelectControl in ConstantsEditorControls.
+	* Fix: Missing __wakeup method in Node to make special features in getters to work with unserialized objects.
 
 2014-03-26 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Fix: NAViTiA Url size limit workaround. RequestURL in API url can cause calls to fail.

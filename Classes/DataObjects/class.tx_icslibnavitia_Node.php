@@ -300,4 +300,14 @@ abstract class tx_icslibnavitia_Node {
 	}
 	
 	abstract public function __toString();
+	
+	public function __wakeup() {
+		foreach (array('externalCode', 'idx') as $name) {
+			if (isset($this->values[$name]) && !empty($this->values[$name])) {
+				list($type) = explode('_', strrev(get_class($this)));
+				$type = strrev($type);
+				self::$repository[$type][$name][$this->values[$name]] = $this;
+			}
+		}
+	}
 }
