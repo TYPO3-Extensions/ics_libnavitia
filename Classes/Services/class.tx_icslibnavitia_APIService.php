@@ -355,12 +355,13 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	 * @param integer $before Number of results before the best match. Optional. Default to zero (0).
 	 * @param integer $after Number of results after the best match. Optional. Default to zero (0).
 	 * @param array $binaryCriteria Result of a call to {@link getBinaryCriteria()}. Optional. Default to not defined.
+	 * @param array $manageDisrupt //TODO: Comment. Optional. Default to FALSE.
 	 * @return array The list of results and comments. 
 	 *        Results are in the {@link tx_icslibnavitia_NodeList} in <code>JourneyResultList</code> key. Each element is a {@link tx_icslibnavitia_JourneyResult};
 	 *        Comments are in the {@link tx_icslibnavitia_NodeList} in <code>CommentList</code> key. Not yet defined.
 	 */
 	public function getPlanJourney(tx_icslibnavitia_EntryPointDefinition $from, tx_icslibnavitia_EntryPointDefinition $to,
-		$isStartTime = TRUE, DateTime $when = NULL, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0, $binaryCriteria = NULL) {
+		$isStartTime = TRUE, DateTime $when = NULL, $kind = tx_icslibnavitia_APIService::PLANJOURNEYKIND_ASAP, $before = 0, $after = 0, $binaryCriteria = NULL, $manageDisrupt = FALSE) {
 		$params = array();
 		$params['Departure'] = (string)$from;
 		$params['Arrival'] = (string)$to;
@@ -378,6 +379,9 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 			$params['ModeType'] = $binaryCriteria['ModeType'];
 			$params['Equipment'] = $binaryCriteria['Equipment'];
 			$params['Vehicle'] = $binaryCriteria['Vehicle'];
+		}
+		if ($manageDisrupt) {
+			$params['ManageDisrupt'] = 1;
 		}
 		$xml = $this->CallAPI('PlanJourney', $params);
 		if (!$xml) {
