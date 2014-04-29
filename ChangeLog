@@ -1,3 +1,6 @@
+2014-04-29 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Feature: Added CacheManager providing a cache action.
+
 2014-04-04 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Added APIService::getPlanJourney manageDisrupt parameter.
 	* Feature: Added LineSelectControl in ConstantsEditorControls.
