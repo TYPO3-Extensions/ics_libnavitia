@@ -43,6 +43,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 	const LIFETIME = 604800; // One week in seconds.
 
 	public function execute() {
+		$this->checkUpdate();
 		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_icslibnavitia_cachedrequests', '`usedLast` > (UNIX_TIMESTAMP() - ' . self::LIFETIME . ')', '', 'url, login');
 		if (!empty($queries)) {
 			$updated = $this->cacheQueries($queries);
@@ -86,7 +87,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 	}
 	
 	protected function cleanQueries() {
-		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('hash', 'tx_icslibnavitia_cachedrequests', '`usedLast` < (UNIX_TIMESTAMP() - ' . self::LIFETIME . ')');
+		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('hash', 'tx_icslibnavitia_cachedrequests', '`usedLast` <= (UNIX_TIMESTAMP() - ' . self::LIFETIME . ')');
 		$hashes = array_map(function ($query) { return $query['hash']; }, $queries);
 		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
 			'tx_icslibnavitia_cachedrequests', 
@@ -98,5 +99,30 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 				unlink($path);
 			}
 		}
+	}
+	
+	protected function checkUpdate() {
+		$cleanup = FALSE;
+		$registry = t3lib_div::makeInstance('t3lib_Registry');
+		$last = $registry->get('tx_libnavitia', 'services', array());
+		$services = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('url', 'tx_icslibnavitia_cachedrequests', '', 'url');
+		foreach ($services as $service) {
+			$hash = sha1($service['url']);
+			$service = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $service['url'], '');
+			$const = $service->getConst();
+			$pubDateObj = $const->Database->PublicationDate;
+			$pubDate = new DateTime();
+			$pubDate->setDate($pubDateObj->Year, $pubDateObj->Month, $pubDateObj->Day);
+			$pubDate->setTime($pubDateObj->Hour, $pubDateObj->Minute, 0);
+			if (!isset($last[$hash]) || ($last[$hash] < $pubDate->getTimestamp())) {
+				$cleanup = TRUE;
+			}
+			$last[$hash] = $pubDate->getTimestamp();
+		}
+		if ($cleanup) {
+			$manager = t3lib_div::makeInstance('tx_icslibnavitia_CacheManager');
+			$manager->cleanup();
+		}
+		$registry->set('tx_libnavitia', 'services', $last);
 	}
 }

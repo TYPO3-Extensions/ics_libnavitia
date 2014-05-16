@@ -108,6 +108,16 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 	}
 	
 	/**
+	 * Does a RAW call to NAViTiA Const page.
+	 */
+	public function CallConst() {
+		$url = $this->serviceUrl . '/Const';
+		$report = array();
+		$result = t3lib_div::getURL($url, 0, FALSE, $report);
+		return $result;
+	}
+	
+	/**
 	 * Does a RAW call to a NAViTiA API fonction.
 	 *
 	 * @param string $action The API function to call.
@@ -1532,5 +1542,72 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 			}
 			return $result;
 		});
+	}
+	
+	/**
+	 * Retrieves Const values as object.
+	 * @return object Object representing the XML structured data.
+	 */
+	public function getConst() {
+		$xml = $this->CallConst();
+		if (!$xml) {
+			tx_icslibnavitia_Debug::warning('Failed to call Const');
+			return NULL;
+		}
+		$reader = new XMLReader();
+		$reader->XML($xml);
+		if (!$this->XMLMoveToRootElement($reader, 'const')) {
+			tx_icslibnavitia_Debug::warning('Invalid response from Const');
+			return NULL;
+		}
+		$navigate = NULL;
+		$navigate = function(XMLReader $reader) use(&$navigate) {
+			$object = new stdClass();
+			$attributes = $reader->hasAttributes;
+			$children = FALSE;
+			$value = NULL;
+			if ($attributes) {
+				$reader->moveToFirstAttribute();
+				do {
+					$key = $reader->localName;
+					$val = $reader->value;
+					$object->$key = $val;
+				}
+				while ($reader->moveToNextAttribute());
+				$reader->moveToElement();
+			}
+			if (!$reader->isEmptyElement) {
+				$reader->read();
+				while (($reader->nodeType != XMLReader::END_ELEMENT) && ($reader->nodeType != XMLReader::NONE)) {
+					switch ($reader->nodeType) {
+						case XMLReader::TEXT:
+							if (!$children) {
+								if ($value == NULL) {
+									$value = '';
+								}
+								$value .= $reader->value;
+							}
+							break;
+						case XMLReader::ELEMENT:
+							$children = TRUE;
+							$key = $reader->localName;
+							$object->$key = $navigate($reader);
+							break;
+					}
+					$reader->read();
+				}
+			}
+			if (!$children) {
+				if (!$attributes) {
+					$object = $value;
+				}
+				else {
+					$object->value = $value;
+				}
+			}
+			return $object;
+		};
+		$root = $navigate($reader);
+		return $root;
 	}
 }
