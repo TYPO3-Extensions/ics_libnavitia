@@ -44,7 +44,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 
 	public function execute() {
 		$this->checkUpdate();
-		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_icslibnavitia_cachedrequests', '`usedLast` > (UNIX_TIMESTAMP() - ' . self::LIFETIME . ')', '', 'url, login');
+		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_icslibnavitia_cachedrequests', '`usedLast` > (UNIX_TIMESTAMP() - ' . self::LIFETIME . ') AND url <> \'\'', '', 'url, login');
 		if (!empty($queries)) {
 			$updated = $this->cacheQueries($queries);
 			if (!empty($updated)) {
@@ -87,7 +87,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 	}
 	
 	protected function cleanQueries() {
-		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('hash', 'tx_icslibnavitia_cachedrequests', '`usedLast` <= (UNIX_TIMESTAMP() - ' . self::LIFETIME . ')');
+		$queries = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('hash', 'tx_icslibnavitia_cachedrequests', '`usedLast` <= (UNIX_TIMESTAMP() - ' . self::LIFETIME . ') OR url = \'\'');
 		$hashes = array_map(function ($query) { return $query['hash']; }, $queries);
 		$GLOBALS['TYPO3_DB']->exec_DELETEquery(
 			'tx_icslibnavitia_cachedrequests', 
@@ -105,7 +105,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 		$cleanup = FALSE;
 		$registry = t3lib_div::makeInstance('t3lib_Registry');
 		$last = $registry->get('tx_libnavitia', 'services', array());
-		$services = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('url', 'tx_icslibnavitia_cachedrequests', '', 'url');
+		$services = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('url', 'tx_icslibnavitia_cachedrequests', 'url <> \'\'', 'url');
 		foreach ($services as $service) {
 			$hash = sha1($service['url']);
 			$service = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $service['url'], '');
@@ -122,7 +122,14 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 		if ($cleanup) {
 			$manager = t3lib_div::makeInstance('tx_icslibnavitia_CacheManager');
 			$manager->cleanup();
+			$registry->set('tx_libnavitia', 'cleanup', array('when' => time(), 'auto' => TRUE));
 		}
 		$registry->set('tx_libnavitia', 'services', $last);
+	}
+
+	public function getAdditionalInformation() {
+		$registry = t3lib_div::makeInstance('t3lib_Registry');
+		$cleanup = $registry->get('tx_libnavitia', 'cleanup', NULL);
+		return ($cleanup != NULL) ? sprintf('Last %s cleanup: %s', $cleanup['auto'] ? 'automatic' : 'manual', date('c', $cleanup['when'])) : 'No information';
 	}
 }

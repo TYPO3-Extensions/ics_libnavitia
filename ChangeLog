@@ -1,3 +1,6 @@
+2014-08-19 Pierrick Caillon <pierrick.caillon@plan-net.fr>
+	* Fix: Important fix in cache task.
+
 2014-05-16 Pierrick Caillon <pierrick.caillon@plan-net.fr>
 	* Feature: Added database publication date update for automatic whole cache cleanup.
 
