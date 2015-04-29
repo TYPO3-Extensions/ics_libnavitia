@@ -107,7 +107,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 		$last = $registry->get('tx_libnavitia', 'services', array());
 		$services = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('url', 'tx_icslibnavitia_cachedrequests', 'url <> \'\'', 'url');
 		foreach ($services as $service) {
-			$hash = sha1($service['url']);
+			$hash = hash('sha256', $service['url']);
 			$service = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $service['url'], '');
 			$const = $service->getConst();
 			$pubDateObj = $const->Database->PublicationDate;

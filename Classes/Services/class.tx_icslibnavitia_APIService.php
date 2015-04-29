@@ -136,7 +136,7 @@ class ${childClassname} extends tx_icslibnavitia_APIService {
 				$action,
 				$params
 			);
-			$hash = md5(serialize($cacheRow));
+			$hash = hash('sha256', serialize($cacheRow));
 			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
 			$this->lastCacheHash = $hash;
 			if (file_exists($path)) {
