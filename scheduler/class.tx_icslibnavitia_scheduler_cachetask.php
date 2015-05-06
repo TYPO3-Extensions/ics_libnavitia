@@ -77,7 +77,8 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 				case 'API':
 					$result = $service->CallAPI($query['action'], $parameters);
 					if ($result) {
-						t3lib_div::writeFileToTypo3tempDir(t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $query['hash']), $result);
+						$hash64 = base64_encode(pack("H*" , $query['hash']));
+						t3lib_div::writeFileToTypo3tempDir(t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash64), $result);
 						$hashes[] = $query['hash'];
 					}
 					break;
@@ -94,6 +95,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 			'hash IN (' . implode(',', $GLOBALS['TYPO3_DB']->fullQuoteArray($hashes, 'tx_icslibnavitia_scheduler_cachetask')) . ')'
 		);
 		foreach ($hashes as $hash) {
+			$hash64 = base64_encode(pack("H*" , $hash));
 			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
 			if (file_exists($path)) {
 				unlink($path);
