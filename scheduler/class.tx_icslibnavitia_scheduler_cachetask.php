@@ -77,7 +77,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 				case 'API':
 					$result = $service->CallAPI($query['action'], $parameters);
 					if ($result) {
-						$hash64 = base64_encode(pack("H*" , $query['hash']));
+						$hash64 = str_replace(array('/', '+'), array('_', '-'), base64_encode(pack("H*" , $query['hash'])));
 						t3lib_div::writeFileToTypo3tempDir(t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash64), $result);
 						$hashes[] = $query['hash'];
 					}
