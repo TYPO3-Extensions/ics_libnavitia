@@ -96,7 +96,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 		);
 		foreach ($hashes as $hash) {
 			$hash64 = base64_encode(pack("H*" , $hash));
-			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash);
+			$path = t3lib_div::getFileAbsFileName(tx_icslibnavitia_APIService::CACHE_DIR . $hash64);
 			if (file_exists($path)) {
 				unlink($path);
 			}
@@ -109,7 +109,7 @@ class tx_icslibnavitia_scheduler_cachetask extends tx_scheduler_Task {
 		$last = $registry->get('tx_libnavitia', 'services', array());
 		$services = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('url', 'tx_icslibnavitia_cachedrequests', 'url <> \'\'', 'url');
 		foreach ($services as $service) {
-			$hash = hash('sha256', $service['url']);
+			$hash = sha1($service['url']);
 			$service = t3lib_div::makeInstance('tx_icslibnavitia_APIService', $service['url'], '');
 			$const = $service->getConst();
 			$pubDateObj = $const->Database->PublicationDate;
